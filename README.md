@@ -119,12 +119,18 @@ The design is inspired by colorful, playful kids' place aesthetics with:
 
 ## Deployment
 
-### Production Setup
-1. Set up MySQL database
-2. Configure environment variables
-3. Build frontend: `npm run build`
-4. Deploy backend to your server
-5. Serve frontend build files
+### Quick Deploy to Vercel (Frontend)
+1. Push to GitHub repository
+2. Connect Vercel to your GitHub account
+3. Import the repository
+4. Vercel will automatically detect and deploy the frontend
+
+### Backend Deployment Options
+- **Railway**: Best for MVP (MySQL included)
+- **Render**: Free tier available
+- **Heroku**: Limited free tier
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
 ### Docker (Optional)
 ```bash
@@ -155,4 +161,4 @@ For support or questions, please contact the development team.
 
 ---
 
-Made with ❤️ for Bubko Kids Place
+Made with ❤️ for Bubko Kids Pla
