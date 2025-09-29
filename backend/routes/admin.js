@@ -10,10 +10,11 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     const db = req.app.locals.db;
 
     // Find user by QR code
-    const [users] = await db.execute(
-      'SELECT * FROM users WHERE qr_code = ?',
+    const result = await db.query(
+      'SELECT * FROM users WHERE qr_code = $1',
       [qrCode]
     );
+    const users = result.rows;
 
     if (users.length === 0) {
       return res.status(404).json({ error: 'Invalid QR code' });
@@ -40,11 +41,11 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     }
 
     // Record regular visit
-    await db.execute('BEGIN');
+    await db.query('BEGIN');
 
     // Insert visit record
-    await db.execute(
-      'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
+    await db.query(
+      'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES ($1, $2, $3)',
       [user.id, isFreeVisit, req.admin.id]
     );
 
@@ -52,12 +53,12 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     const newTotalVisits = user.total_visits + 1;
     const newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
 
-    await db.execute(
-      'UPDATE users SET total_visits = ?, free_visits_earned = ? WHERE id = ?',
+    await db.query(
+      'UPDATE users SET total_visits = $1, free_visits_earned = $2 WHERE id = $3',
       [newTotalVisits, newFreeVisitsEarned, user.id]
     );
 
-    await db.execute('COMMIT');
+    await db.query('COMMIT');
 
     res.json({
       success: true,
@@ -70,7 +71,7 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
       }
     });
   } catch (error) {
-    await db.execute('ROLLBACK');
+    await db.query('ROLLBACK');
     console.error('Scan error:', error);
     res.status(500).json({ error: 'Failed to record visit' });
   }
@@ -82,10 +83,11 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
     const { qrCode, useFreeVisit } = req.body;
     const db = req.app.locals.db;
 
-    const [users] = await db.execute(
-      'SELECT * FROM users WHERE qr_code = ?',
+    const result = await db.query(
+      'SELECT * FROM users WHERE qr_code = $1',
       [qrCode]
     );
+    const users = result.rows;
 
     if (users.length === 0) {
       return res.status(404).json({ error: 'Invalid QR code' });
@@ -94,11 +96,11 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
     const user = users[0];
     const isFreeVisit = useFreeVisit === true;
 
-    await db.execute('BEGIN');
+    await db.query('BEGIN');
 
     // Insert visit record
-    await db.execute(
-      'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
+    await db.query(
+      'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES ($1, $2, $3)',
       [user.id, isFreeVisit, req.admin.id]
     );
 
@@ -115,12 +117,12 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
       newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
     }
 
-    await db.execute(
-      'UPDATE users SET total_visits = ?, free_visits_earned = ?, free_visits_used = ? WHERE id = ?',
+    await db.query(
+      'UPDATE users SET total_visits = $1, free_visits_earned = $2, free_visits_used = $3 WHERE id = $4',
       [newTotalVisits, newFreeVisitsEarned, newFreeVisitsUsed, user.id]
     );
 
-    await db.execute('COMMIT');
+    await db.query('COMMIT');
 
     res.json({
       success: true,
@@ -134,7 +136,7 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
       }
     });
   } catch (error) {
-    await db.execute('ROLLBACK');
+    await db.query('ROLLBACK');
     console.error('Free visit error:', error);
     res.status(500).json({ error: 'Failed to process visit' });
   }
@@ -146,26 +148,30 @@ router.get('/dashboard', authenticateAdmin, async (req, res) => {
     const db = req.app.locals.db;
 
     // Get total users
-    const [totalUsers] = await db.execute('SELECT COUNT(*) as count FROM users');
+    const totalUsersResult = await db.query('SELECT COUNT(*) as count FROM users');
+    const totalUsers = totalUsersResult.rows;
     
     // Get today's visits
-    const [todayVisits] = await db.execute(
-      'SELECT COUNT(*) as count FROM visits WHERE DATE(visit_date) = CURDATE()'
+    const todayVisitsResult = await db.query(
+      'SELECT COUNT(*) as count FROM visits WHERE DATE(visit_date) = CURRENT_DATE'
     );
+    const todayVisits = todayVisitsResult.rows;
     
     // Get this month's visits
-    const [monthVisits] = await db.execute(
-      'SELECT COUNT(*) as count FROM visits WHERE MONTH(visit_date) = MONTH(CURDATE()) AND YEAR(visit_date) = YEAR(CURDATE())'
+    const monthVisitsResult = await db.query(
+      'SELECT COUNT(*) as count FROM visits WHERE EXTRACT(MONTH FROM visit_date) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(YEAR FROM visit_date) = EXTRACT(YEAR FROM CURRENT_DATE)'
     );
+    const monthVisits = monthVisitsResult.rows;
 
     // Get recent visits
-    const [recentVisits] = await db.execute(`
+    const recentVisitsResult = await db.query(`
       SELECT v.visit_date, v.is_free_visit, u.first_name, u.last_name 
       FROM visits v 
       JOIN users u ON v.user_id = u.id 
       ORDER BY v.visit_date DESC 
       LIMIT 10
     `);
+    const recentVisits = recentVisitsResult.rows;
 
     res.json({
       totalUsers: totalUsers[0].count,

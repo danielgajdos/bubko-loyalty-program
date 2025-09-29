@@ -39,7 +39,11 @@
                 v-model="form.email" 
                 required
                 placeholder="tvoj@email.sk"
+                @blur="validateEmail"
               >
+              <div v-if="emailError" class="field-error">
+                {{ emailError }}
+              </div>
             </div>
             
             <div class="form-group">
@@ -125,13 +129,33 @@ export default {
       },
       loading: false,
       error: '',
-      success: ''
+      success: '',
+      emailError: ''
     }
   },
   methods: {
+    validateEmail() {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!this.form.email) {
+        this.emailError = ''
+        return false
+      }
+      if (!emailRegex.test(this.form.email)) {
+        this.emailError = 'Zadajte platný email'
+        return false
+      }
+      this.emailError = ''
+      return true
+    },
+    
     async handleRegister() {
       this.error = ''
       this.success = ''
+      
+      // Validate email
+      if (!this.validateEmail()) {
+        return
+      }
       
       if (this.form.password !== this.form.confirmPassword) {
         this.error = 'Heslá sa nezhodujú'
@@ -188,5 +212,11 @@ export default {
   .title {
     font-size: 2.5rem;
   }
+}
+
+.field-error {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-top: 5px;
 }
 </style>

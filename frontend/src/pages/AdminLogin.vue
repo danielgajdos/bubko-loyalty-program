@@ -47,13 +47,7 @@
             </router-link>
           </div>
           
-          <div class="admin-info mt-20">
-            <p style="color: #666; font-size: 0.9rem; text-align: center;">
-              <strong>Demo prístup:</strong><br>
-              Používateľ: admin<br>
-              Heslo: admin123
-            </p>
-          </div>
+
         </div>
       </div>
     </div>
