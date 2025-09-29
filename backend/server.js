@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -16,25 +16,10 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // Database connection
-let dbConfig;
-
-if (process.env.DATABASE_URL) {
-  // Use DATABASE_URL if available (Railway)
-  dbConfig = process.env.DATABASE_URL;
-} else {
-  // Use individual environment variables
-  dbConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-  };
-}
-
-const pool = mysql.createPool(dbConfig);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 // Make database available to routes
 app.locals.db = pool;
@@ -55,9 +40,9 @@ app.post('/api/setup-db', async (req, res) => {
     const db = req.app.locals.db;
     
     // Create users table
-    await db.execute(`
+    await db.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         first_name VARCHAR(100) NOT NULL,
@@ -68,26 +53,26 @@ app.post('/api/setup-db', async (req, res) => {
         free_visits_earned INT DEFAULT 0,
         free_visits_used INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
     // Create admin_users table
-    await db.execute(`
+    await db.query(`
       CREATE TABLE IF NOT EXISTS admin_users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
         username VARCHAR(100) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         email VARCHAR(255) NOT NULL,
-        role ENUM('admin', 'staff') DEFAULT 'staff',
+        role VARCHAR(10) DEFAULT 'staff' CHECK (role IN ('admin', 'staff')),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
     // Create visits table
-    await db.execute(`
+    await db.query(`
       CREATE TABLE IF NOT EXISTS visits (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
         user_id INT NOT NULL,
         visit_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_free_visit BOOLEAN DEFAULT FALSE,
@@ -100,8 +85,8 @@ app.post('/api/setup-db', async (req, res) => {
     // Create default admin user
     const bcrypt = require('bcrypt');
     const adminPasswordHash = await bcrypt.hash('admin123', 10);
-    await db.execute(
-      'INSERT IGNORE INTO admin_users (username, password_hash, email, role) VALUES (?, ?, ?, ?)',
+    await db.query(
+      'INSERT INTO admin_users (username, password_hash, email, role) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO NOTHING',
       ['admin', adminPasswordHash, 'admin@bubko.sk', 'admin']
     );
 
