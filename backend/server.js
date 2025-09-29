@@ -11,7 +11,15 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://frontend-8ywntxqs6-bubkos-projects.vercel.app',
+    'https://frontend-gupk852ce-bubkos-projects.vercel.app',
+    /.*\.vercel\.app$/
+  ],
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.static('public'));
 
