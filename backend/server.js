@@ -16,15 +16,23 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // Database connection
-const dbConfig = {
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-};
+let dbConfig;
+
+if (process.env.DATABASE_URL) {
+  // Use DATABASE_URL if available (Railway)
+  dbConfig = process.env.DATABASE_URL;
+} else {
+  // Use individual environment variables
+  dbConfig = {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+  };
+}
 
 const pool = mysql.createPool(dbConfig);
 
