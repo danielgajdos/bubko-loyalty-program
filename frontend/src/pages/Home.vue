@@ -63,6 +63,9 @@
             <router-link to="/admin" style="color: #666; text-decoration: none;">
               🛰️ Riadiace centrum
             </router-link>
+            <div style="margin-top: 10px; font-size: 0.8rem; color: #999;">
+              API: {{ apiUrl }}
+            </div>
           </div>
         </div>
       </div>
@@ -72,7 +75,12 @@
 
 <script>
 export default {
-  name: 'Home'
+  name: 'Home',
+  computed: {
+    apiUrl() {
+      return import.meta.env.VITE_API_URL || '/api'
+    }
+  }
 }
 </script>
 
