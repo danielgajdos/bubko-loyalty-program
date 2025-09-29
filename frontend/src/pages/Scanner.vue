@@ -148,20 +148,45 @@ export default {
     checkCameraSupport() {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         this.cameraSupported = false
+        return
+      }
+      
+      // Check if we're on HTTPS or localhost
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+        this.cameraSupported = false
+        this.error = 'Kamera vyžaduje HTTPS pripojenie'
       }
     },
 
     async startCamera() {
       try {
+        // Check if we're on HTTPS or localhost
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+          this.error = 'Kamera vyžaduje HTTPS pripojenie. Použite manuálne zadanie QR kódu.'
+          return
+        }
+
         this.cameraActive = true
         this.error = ''
+        
+        // Request camera permission first
+        try {
+          await navigator.mediaDevices.getUserMedia({ video: true })
+        } catch (permissionError) {
+          this.error = 'Prístup ke kamere bol zamietnutý. Povoľte prístup ke kamere a skúste znovu.'
+          this.cameraActive = false
+          return
+        }
         
         this.qrScanner = new Html5QrcodeScanner(
           "qr-reader",
           { 
             fps: 10,
             qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0
+            aspectRatio: 1.0,
+            showTorchButtonIfSupported: true,
+            showZoomSliderIfSupported: true,
+            defaultZoomValueIfSupported: 2
           },
           false
         )
@@ -171,11 +196,16 @@ export default {
             this.onScanSuccess(decodedText)
           },
           (error) => {
-            // Ignore scan errors, they happen frequently
+            // Ignore frequent scan errors, but log permission errors
+            if (error.includes('Permission') || error.includes('NotAllowed')) {
+              this.error = 'Prístup ke kamere bol zamietnutý'
+              this.stopCamera()
+            }
           }
         )
       } catch (error) {
-        this.error = 'Nepodarilo sa spustiť kameru'
+        console.error('Camera error:', error)
+        this.error = `Chyba kamery: ${error.message || 'Neznáma chyba'}. Skúste manuálne zadanie.`
         this.cameraActive = false
       }
     },
