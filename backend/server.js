@@ -42,6 +42,17 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Bubko Loyalty API is running' });
 });
 
+// Debug endpoint to check user data
+app.get('/api/debug/users', async (req, res) => {
+  try {
+    const db = req.app.locals.db;
+    const result = await db.query('SELECT id, email, qr_code FROM users LIMIT 5');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Database setup endpoint
 app.post('/api/setup-db', async (req, res) => {
   try {
