@@ -13,10 +13,11 @@ router.post('/register', async (req, res) => {
     const db = req.app.locals.db;
 
     // Check if user exists
-    const [existingUsers] = await db.execute(
-      'SELECT id FROM users WHERE email = ?',
+    const existingResult = await db.query(
+      'SELECT id FROM users WHERE email = $1',
       [email]
     );
+    const existingUsers = existingResult.rows;
 
     if (existingUsers.length > 0) {
       return res.status(400).json({ error: 'Email already registered' });
@@ -29,8 +30,8 @@ router.post('/register', async (req, res) => {
     const qrCode = uuidv4();
 
     // Insert user
-    const [result] = await db.execute(
-      'INSERT INTO users (email, password_hash, first_name, last_name, phone, qr_code) VALUES (?, ?, ?, ?, ?, ?)',
+    const result = await db.query(
+      'INSERT INTO users (email, password_hash, first_name, last_name, phone, qr_code) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
       [email, passwordHash, firstName, lastName, phone, qrCode]
     );
 
@@ -48,7 +49,7 @@ router.post('/register', async (req, res) => {
       message: 'Registration successful',
       token,
       user: {
-        id: result.insertId,
+        id: result.rows[0].id,
         email,
         firstName,
         lastName,
@@ -69,10 +70,11 @@ router.post('/login', async (req, res) => {
     const db = req.app.locals.db;
 
     // Find user
-    const [users] = await db.execute(
-      'SELECT * FROM users WHERE email = ?',
+    const result = await db.query(
+      'SELECT * FROM users WHERE email = $1',
       [email]
     );
+    const users = result.rows;
 
     if (users.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -124,10 +126,11 @@ router.post('/admin/login', async (req, res) => {
     const db = req.app.locals.db;
 
     // Find admin
-    const [admins] = await db.execute(
-      'SELECT * FROM admin_users WHERE username = ?',
+    const adminResult = await db.query(
+      'SELECT * FROM admin_users WHERE username = $1',
       [username]
     );
+    const admins = adminResult.rows;
 
     if (admins.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });

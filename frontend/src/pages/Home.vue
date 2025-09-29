@@ -2,6 +2,10 @@
   <div class="home">
     <div class="bubko-banner">
       <img src="/bubko-banner.jpg" alt="Bubko Detská Hernička" class="banner-image" />
+      <div class="flying-astronauts">
+        <div class="astronaut astronaut-1">👨‍🚀</div>
+        <div class="astronaut astronaut-2">👩‍🚀</div>
+      </div>
     </div>
     
     <div class="container">
@@ -93,6 +97,75 @@ export default {
 
 .banner-image:hover {
   transform: scale(1.02);
+}
+
+.flying-astronauts {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.astronaut {
+  position: absolute;
+  font-size: 3rem;
+  z-index: 10;
+}
+
+.astronaut-1 {
+  top: 20%;
+  left: -100px;
+  animation: flyAcross1 15s linear infinite;
+}
+
+.astronaut-2 {
+  bottom: 30%;
+  right: -100px;
+  animation: flyAcross2 18s linear infinite;
+  animation-delay: 7s;
+}
+
+@keyframes flyAcross1 {
+  0% {
+    left: -100px;
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-30px) rotate(10deg);
+  }
+  50% {
+    transform: translateY(20px) rotate(-5deg);
+  }
+  75% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+  100% {
+    left: calc(100% + 100px);
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes flyAcross2 {
+  0% {
+    right: -100px;
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(25px) rotate(-8deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(8deg);
+  }
+  75% {
+    transform: translateY(15px) rotate(-3deg);
+  }
+  100% {
+    right: calc(100% + 100px);
+    transform: translateY(0px) rotate(0deg);
+  }
 }
 
 @keyframes float {
@@ -249,6 +322,10 @@ export default {
   
   .banner-image {
     max-height: 250px;
+  }
+  
+  .astronaut {
+    font-size: 2rem;
   }
 }
 </style>
