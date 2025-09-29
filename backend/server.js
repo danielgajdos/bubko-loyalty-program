@@ -39,7 +39,7 @@ app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Bubko Loyalty API is running' });
+  res.json({ status: 'OK', message: 'Bubko Loyalty API is running', timestamp: new Date().toISOString() });
 });
 
 // Debug endpoint to check user data
