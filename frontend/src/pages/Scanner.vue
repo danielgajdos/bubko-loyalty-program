@@ -36,15 +36,32 @@
               </div>
             </div>
             
-            <!-- Camera scanner would go here -->
-            <div class="camera-placeholder">
-              <div class="camera-icon">
-                <i class="fas fa-camera"></i>
+            <!-- Camera scanner -->
+            <div class="camera-section">
+              <div v-if="!cameraActive" class="camera-controls">
+                <button @click="startCamera" class="btn btn-success" :disabled="loading">
+                  <i class="fas fa-camera"></i> Spustiť kameru
+                </button>
               </div>
-              <p>Kamera skener bude dostupný v plnej verzii</p>
-              <p style="font-size: 0.9rem; color: #666;">
-                Zatiaľ použite manuálne zadanie QR kódu
-              </p>
+              
+              <div v-if="cameraActive" class="camera-container">
+                <div id="qr-reader" class="qr-reader"></div>
+                <div class="camera-controls">
+                  <button @click="stopCamera" class="btn btn-secondary">
+                    <i class="fas fa-stop"></i> Zastaviť kameru
+                  </button>
+                </div>
+              </div>
+              
+              <div v-if="!cameraSupported" class="camera-placeholder">
+                <div class="camera-icon">
+                  <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <p>Kamera nie je podporovaná v tomto prehliadači</p>
+                <p style="font-size: 0.9rem; color: #666;">
+                  Použite manuálne zadanie QR kódu
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -105,6 +122,7 @@
 
 <script>
 import api from '../utils/api'
+import { Html5QrcodeScanner } from 'html5-qrcode'
 
 export default {
   name: 'Scanner',
@@ -114,10 +132,68 @@ export default {
       scanResult: null,
       loading: false,
       processing: false,
-      error: ''
+      error: '',
+      cameraActive: false,
+      cameraSupported: true,
+      qrScanner: null
     }
   },
+  mounted() {
+    this.checkCameraSupport()
+  },
+  beforeUnmount() {
+    this.stopCamera()
+  },
   methods: {
+    checkCameraSupport() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        this.cameraSupported = false
+      }
+    },
+
+    async startCamera() {
+      try {
+        this.cameraActive = true
+        this.error = ''
+        
+        this.qrScanner = new Html5QrcodeScanner(
+          "qr-reader",
+          { 
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+          },
+          false
+        )
+        
+        this.qrScanner.render(
+          (decodedText) => {
+            this.onScanSuccess(decodedText)
+          },
+          (error) => {
+            // Ignore scan errors, they happen frequently
+          }
+        )
+      } catch (error) {
+        this.error = 'Nepodarilo sa spustiť kameru'
+        this.cameraActive = false
+      }
+    },
+
+    stopCamera() {
+      if (this.qrScanner) {
+        this.qrScanner.clear()
+        this.qrScanner = null
+      }
+      this.cameraActive = false
+    },
+
+    async onScanSuccess(decodedText) {
+      this.stopCamera()
+      this.manualQrCode = decodedText
+      await this.scanQrCode()
+    },
+
     async scanQrCode() {
       if (!this.manualQrCode.trim()) return
       
@@ -150,6 +226,7 @@ export default {
     },
     
     resetScanner() {
+      this.stopCamera()
       this.manualQrCode = ''
       this.scanResult = null
       this.error = ''
@@ -198,12 +275,32 @@ export default {
   white-space: nowrap;
 }
 
+.camera-section {
+  margin-top: 30px;
+}
+
+.camera-container {
+  background: #f8f9fa;
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+}
+
+.qr-reader {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.camera-controls {
+  text-align: center;
+  margin-top: 20px;
+}
+
 .camera-placeholder {
   text-align: center;
   padding: 60px 20px;
   background: #f8f9fa;
   border-radius: 15px;
-  margin-top: 30px;
   border: 2px dashed #ddd;
 }
 
