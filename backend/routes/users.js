@@ -31,7 +31,8 @@ router.get('/profile', authenticateToken, async (req, res) => {
       freeVisitsEarned: user.free_visits_earned,
       freeVisitsUsed: user.free_visits_used,
       availableFreeVisits: user.free_visits_earned - user.free_visits_used,
-      qrCode: qrCodeDataURL
+      qrCode: qrCodeDataURL,
+      qrCodeText: user.qr_code
     });
   } catch (error) {
     console.error('Profile error:', error);

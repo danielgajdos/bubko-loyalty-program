@@ -52,7 +52,8 @@ router.post('/register', async (req, res) => {
         email,
         firstName,
         lastName,
-        qrCode: qrCodeDataURL
+        qrCode: qrCodeDataURL,
+        qrCodeText: qrCode
       }
     });
   } catch (error) {
@@ -106,7 +107,8 @@ router.post('/login', async (req, res) => {
         totalVisits: user.total_visits,
         freeVisitsEarned: user.free_visits_earned,
         freeVisitsUsed: user.free_visits_used,
-        qrCode: qrCodeDataURL
+        qrCode: qrCodeDataURL,
+        qrCodeText: user.qr_code
       }
     });
   } catch (error) {

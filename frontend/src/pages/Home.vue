@@ -1,23 +1,7 @@
 <template>
   <div class="home">
     <div class="bubko-banner">
-      <div class="banner-content">
-        <h1 class="banner-title">🚀 BUBKO</h1>
-        <p class="banner-subtitle">DETSKÁ HERNIČKA</p>
-        <div class="social-info">
-          <div class="social-icons">
-            <span class="social-icon">📘</span>
-            <span class="social-icon">📷</span>
-          </div>
-          <p class="social-handle">bubko.detskahernička</p>
-        </div>
-      </div>
-      <div class="space-elements">
-        <div class="astronaut">👨‍🚀</div>
-        <div class="astronaut astronaut-2">👩‍🚀</div>
-        <div class="planet">🌙</div>
-        <div class="planet planet-2">🪐</div>
-      </div>
+      <img src="/bubko-banner.jpg" alt="Bubko Detská Hernička" class="banner-image" />
     </div>
     
     <div class="container">
@@ -90,131 +74,25 @@ export default {
 
 .bubko-banner {
   width: 100%;
-  height: 400px;
   margin-bottom: 40px;
   display: flex;
-  align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #1a237e 0%, #283593 25%, #3949ab 50%, #5c6bc0 75%, #7986cb 100%);
+  padding: 20px;
   border-radius: 0 0 30px 30px;
-  position: relative;
-  overflow: hidden;
 }
 
-.bubko-banner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    radial-gradient(2px 2px at 20px 30px, #fff, transparent),
-    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
-    radial-gradient(1px 1px at 90px 40px, #fff, transparent),
-    radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
-    radial-gradient(2px 2px at 160px 30px, #fff, transparent);
-  background-repeat: repeat;
-  background-size: 200px 100px;
-  animation: twinkle 3s ease-in-out infinite alternate;
-  pointer-events: none;
+.banner-image {
+  max-width: 100%;
+  height: auto;
+  max-height: 400px;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease;
 }
 
-.banner-content {
-  text-align: center;
-  z-index: 10;
-  position: relative;
-}
-
-.banner-title {
-  font-family: 'Fredoka One', cursive;
-  font-size: 4rem;
-  color: #fff;
-  text-shadow: 
-    0 0 20px rgba(255, 255, 255, 0.8),
-    0 0 40px rgba(121, 134, 203, 1),
-    4px 4px 8px rgba(0, 0, 0, 0.5);
-  margin-bottom: 10px;
-  letter-spacing: 0.1em;
-  animation: glow 3s ease-in-out infinite alternate;
-}
-
-.banner-subtitle {
-  font-family: 'Fredoka One', cursive;
-  font-size: 1.8rem;
-  color: #fff;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  margin-bottom: 20px;
-  letter-spacing: 0.05em;
-}
-
-.social-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-.social-icons {
-  display: flex;
-  gap: 15px;
-}
-
-.social-icon {
-  font-size: 1.5rem;
-  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.social-handle {
-  color: #fff;
-  font-size: 1rem;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-  margin: 0;
-}
-
-.space-elements {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.astronaut {
-  position: absolute;
-  font-size: 3rem;
-  animation: float 6s ease-in-out infinite;
-}
-
-.astronaut:first-child {
-  top: 20%;
-  left: 10%;
-  animation-delay: 0s;
-}
-
-.astronaut-2 {
-  bottom: 20%;
-  right: 10%;
-  animation-delay: 3s;
-}
-
-.planet {
-  position: absolute;
-  font-size: 2.5rem;
-  animation: rotate 20s linear infinite;
-}
-
-.planet:first-of-type {
-  top: 15%;
-  right: 20%;
-  animation-delay: 0s;
-}
-
-.planet-2 {
-  bottom: 15%;
-  left: 15%;
-  animation-delay: 10s;
+.banner-image:hover {
+  transform: scale(1.02);
 }
 
 @keyframes float {
@@ -366,23 +244,11 @@ export default {
   }
   
   .bubko-banner {
-    height: 300px;
+    padding: 15px;
   }
   
-  .banner-title {
-    font-size: 2.5rem;
-  }
-  
-  .banner-subtitle {
-    font-size: 1.2rem;
-  }
-  
-  .astronaut {
-    font-size: 2rem;
-  }
-  
-  .planet {
-    font-size: 1.8rem;
+  .banner-image {
+    max-height: 250px;
   }
 }
 </style>

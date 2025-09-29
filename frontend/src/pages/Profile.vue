@@ -51,6 +51,17 @@
           </h3>
           <div class="qr-container">
             <img :src="user.qrCode" alt="QR Code" class="qr-code">
+            <div class="qr-text-backup">
+              <p style="color: #333; font-weight: 600; margin: 15px 0 5px 0;">
+                Záložný kód (ak nefunguje skenovanie):
+              </p>
+              <div class="qr-text-code">
+                {{ user.qrCodeText }}
+              </div>
+              <button @click="copyQrCode" class="btn-copy">
+                <i class="fas fa-copy"></i> Kopírovať kód
+              </button>
+            </div>
             <p style="color: #666; text-align: center; margin-top: 15px;">
               Ukáž tento kód pri vstupe do vesmírnej stanice
             </p>
@@ -152,6 +163,29 @@ export default {
     logout() {
       localStorage.removeItem('token')
       this.$router.push('/')
+    },
+    async copyQrCode() {
+      try {
+        await navigator.clipboard.writeText(this.user.qrCodeText)
+        // Show success feedback
+        const button = document.querySelector('.btn-copy')
+        const originalText = button.innerHTML
+        button.innerHTML = '<i class="fas fa-check"></i> Skopírované!'
+        button.style.background = '#4caf50'
+        
+        setTimeout(() => {
+          button.innerHTML = originalText
+          button.style.background = ''
+        }, 2000)
+      } catch (error) {
+        console.error('Failed to copy:', error)
+        // Fallback: select text
+        const textElement = document.querySelector('.qr-text-code')
+        const range = document.createRange()
+        range.selectNode(textElement)
+        window.getSelection().removeAllRanges()
+        window.getSelection().addRange(range)
+      }
     }
   }
 }
@@ -269,6 +303,47 @@ export default {
   padding: 5px 10px;
   border-radius: 15px;
   font-size: 0.8rem;
+}
+
+.qr-text-backup {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 2px dashed #ddd;
+}
+
+.qr-text-code {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #333;
+  background: white;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  text-align: center;
+  margin: 10px 0;
+  word-break: break-all;
+  user-select: all;
+}
+
+.btn-copy {
+  background: linear-gradient(45deg, #7986cb, #5c6bc0);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: block;
+  margin: 10px auto 0;
+}
+
+.btn-copy:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(121, 134, 203, 0.4);
 }
 
 .actions {
