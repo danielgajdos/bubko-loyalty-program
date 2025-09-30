@@ -42,9 +42,10 @@ console.log('🔗 Connecting to MySQL:', {
 });
 
 const pool = mysql.createPool(dbConfig);
+const promisePool = pool.promise();
 
 // Make database available to routes
-app.locals.db = pool;
+app.locals.db = promisePool;
 
 // Routes
 app.use('/api/auth', authRoutes);
