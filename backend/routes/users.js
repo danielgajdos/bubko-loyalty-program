@@ -9,7 +9,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
   try {
     const db = req.app.locals.db;
     
-    const [users] = await db.query(
+    const [users] = await db.execute(
       'SELECT id, email, first_name, last_name, phone, total_visits, free_visits_earned, free_visits_used, qr_code FROM users WHERE id = ?',
       [req.user.id]
     );
@@ -45,7 +45,7 @@ router.get('/visits', authenticateToken, async (req, res) => {
   try {
     const db = req.app.locals.db;
     
-    const [visits] = await db.query(
+    const [visits] = await db.execute(
       'SELECT visit_date, is_free_visit FROM visits WHERE user_id = ? ORDER BY visit_date DESC',
       [req.user.id]
     );

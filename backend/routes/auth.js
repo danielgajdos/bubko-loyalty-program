@@ -13,7 +13,7 @@ router.post('/register', async (req, res) => {
     const db = req.app.locals.db;
 
     // Check if user exists
-    const [existingUsers] = await db.query(
+    const [existingUsers] = await db.execute(
       'SELECT id FROM users WHERE email = ?',
       [email]
     );
@@ -29,7 +29,7 @@ router.post('/register', async (req, res) => {
     const qrCode = uuidv4();
 
     // Insert user
-    const [result] = await db.query(
+    const [result] = await db.execute(
       'INSERT INTO users (email, password_hash, first_name, last_name, phone, qr_code) VALUES (?, ?, ?, ?, ?, ?)',
       [email, passwordHash, firstName, lastName, phone, qrCode]
     );
@@ -69,7 +69,7 @@ router.post('/login', async (req, res) => {
     const db = req.app.locals.db;
 
     // Find user
-    const [users] = await db.query(
+    const [users] = await db.execute(
       'SELECT * FROM users WHERE email = ?',
       [email]
     );
@@ -124,7 +124,7 @@ router.post('/admin/login', async (req, res) => {
     const db = req.app.locals.db;
 
     // Find admin
-    const [admins] = await db.query(
+    const [admins] = await db.execute(
       'SELECT * FROM admin_users WHERE username = ?',
       [username]
     );
