@@ -138,6 +138,13 @@ app.post('/api/setup-db', async (req, res) => {
       ['admin', adminPasswordHash, 'admin@bubko.sk', 'admin']
     );
 
+    // Create test user with your specific QR code
+    const testPasswordHash = await bcrypt.hash('test123', 10);
+    await db.execute(
+      'INSERT IGNORE INTO users (email, password_hash, first_name, last_name, phone, qr_code) VALUES (?, ?, ?, ?, ?, ?)',
+      ['test@bubko.sk', testPasswordHash, 'Test', 'User', '+421123456789', 'f2093c74-2707-41d3-867c-cb00ed00f699']
+    );
+
     res.json({
       success: true,
       message: 'Database setup completed successfully!'
