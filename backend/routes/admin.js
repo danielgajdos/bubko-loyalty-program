@@ -39,9 +39,12 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
       });
     }
 
-    // Record regular visit - fix boolean conversion for MySQL
+    // Record regular visit - use promisify for callback-based mysql2
+    const { promisify } = require('util');
+    const query = promisify(db.query).bind(db);
+    
     // Insert visit record
-    await db.query(
+    await query(
       'INSERT INTO visits (user_id, is_free_visit) VALUES (?, ?)',
       [user.id, isFreeVisit ? 1 : 0]
     );
@@ -50,7 +53,7 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     const newTotalVisits = user.total_visits + 1;
     const newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
 
-    await db.query(
+    await query(
       'UPDATE users SET total_visits = ?, free_visits_earned = ? WHERE id = ?',
       [newTotalVisits, newFreeVisitsEarned, user.id]
     );

@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql2/promise');
+const mysql = require('mysql2');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -42,10 +42,9 @@ console.log('🔗 Connecting to MySQL:', {
 });
 
 const pool = mysql.createPool(dbConfig);
-const promisePool = pool.promise();
 
-// Make database available to routes
-app.locals.db = promisePool;
+// Make database available to routes  
+app.locals.db = pool;
 
 // Routes
 app.use('/api/auth', authRoutes);
