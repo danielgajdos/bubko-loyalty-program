@@ -45,7 +45,7 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
 
     try {
       // Insert visit record
-      await connection.execute(
+      await connection.query(
         'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
         [user.id, isFreeVisit, req.admin.id]
       );
@@ -54,7 +54,7 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
       const newTotalVisits = user.total_visits + 1;
       const newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
 
-      await connection.execute(
+      await connection.query(
         'UPDATE users SET total_visits = ?, free_visits_earned = ? WHERE id = ?',
         [newTotalVisits, newFreeVisitsEarned, user.id]
       );
@@ -112,7 +112,7 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
 
     try {
       // Insert visit record
-      await connection.execute(
+      await connection.query(
         'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
         [user.id, isFreeVisit, req.admin.id]
       );
@@ -130,7 +130,7 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
       newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
     }
 
-      await connection.execute(
+      await connection.query(
         'UPDATE users SET total_visits = ?, free_visits_earned = ?, free_visits_used = ? WHERE id = ?',
         [newTotalVisits, newFreeVisitsEarned, newFreeVisitsUsed, user.id]
       );
