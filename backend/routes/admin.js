@@ -10,7 +10,7 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     const db = req.app.locals.db;
 
     // Find user by QR code
-    const [users] = await db.query(
+    const [users] = await db.execute(
       'SELECT * FROM users WHERE qr_code = ?',
       [qrCode]
     );
@@ -40,10 +40,10 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     }
 
     // Record regular visit
-    await db.query('START TRANSACTION');
+    await db.execute('START TRANSACTION');
 
     // Insert visit record
-    await db.query(
+    await db.execute(
       'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
       [user.id, isFreeVisit, req.admin.id]
     );
@@ -52,12 +52,12 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     const newTotalVisits = user.total_visits + 1;
     const newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
 
-    await db.query(
+    await db.execute(
       'UPDATE users SET total_visits = ?, free_visits_earned = ? WHERE id = ?',
       [newTotalVisits, newFreeVisitsEarned, user.id]
     );
 
-    await db.query('COMMIT');
+    await db.execute('COMMIT');
 
     res.json({
       success: true,
@@ -71,7 +71,8 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     });
   } catch (error) {
     try {
-      await db.query('ROLLBACK');
+      const db = req.app.locals.db;
+      await db.execute('ROLLBACK');
     } catch (rollbackError) {
       console.error('Rollback error:', rollbackError);
     }
@@ -86,7 +87,7 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
     const { qrCode, useFreeVisit } = req.body;
     const db = req.app.locals.db;
 
-    const [users] = await db.query(
+    const [users] = await db.execute(
       'SELECT * FROM users WHERE qr_code = ?',
       [qrCode]
     );
@@ -98,10 +99,10 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
     const user = users[0];
     const isFreeVisit = useFreeVisit === true;
 
-    await db.query('START TRANSACTION');
+    await db.execute('START TRANSACTION');
 
     // Insert visit record
-    await db.query(
+    await db.execute(
       'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
       [user.id, isFreeVisit, req.admin.id]
     );
@@ -119,12 +120,12 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
       newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
     }
 
-    await db.query(
+    await db.execute(
       'UPDATE users SET total_visits = ?, free_visits_earned = ?, free_visits_used = ? WHERE id = ?',
       [newTotalVisits, newFreeVisitsEarned, newFreeVisitsUsed, user.id]
     );
 
-    await db.query('COMMIT');
+    await db.execute('COMMIT');
 
     res.json({
       success: true,
@@ -139,7 +140,8 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
     });
   } catch (error) {
     try {
-      await db.query('ROLLBACK');
+      const db = req.app.locals.db;
+      await db.execute('ROLLBACK');
     } catch (rollbackError) {
       console.error('Rollback error:', rollbackError);
     }
@@ -154,20 +156,20 @@ router.get('/dashboard', authenticateAdmin, async (req, res) => {
     const db = req.app.locals.db;
 
     // Get total users
-    const [totalUsers] = await db.query('SELECT COUNT(*) as count FROM users');
+    const [totalUsers] = await db.execute('SELECT COUNT(*) as count FROM users');
     
     // Get today's visits
-    const [todayVisits] = await db.query(
+    const [todayVisits] = await db.execute(
       'SELECT COUNT(*) as count FROM visits WHERE DATE(visit_date) = CURDATE()'
     );
     
     // Get this month's visits
-    const [monthVisits] = await db.query(
-      'SELECT COUNT(*) as count FROM visits WHERE MONTH(visit_date) = MONTH(NOW()) AND YEAR(visit_date) = YEAR(NOW())'
+    const [monthVisits] = await db.execute(
+      'SELECT COUNT(*) as count FROM visits WHERE MONTH(visit_date) = MONTH(CURDATE()) AND YEAR(visit_date) = YEAR(CURDATE())'
     );
 
     // Get recent visits
-    const [recentVisits] = await db.query(`
+    const [recentVisits] = await db.execute(`
       SELECT v.visit_date, v.is_free_visit, u.first_name, u.last_name 
       FROM visits v 
       JOIN users u ON v.user_id = u.id 
