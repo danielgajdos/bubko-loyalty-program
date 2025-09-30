@@ -82,6 +82,42 @@ app.get('/api/test-qr/:qrCode', async (req, res) => {
   }
 });
 
+// Simple scan test endpoint (no auth required)
+app.post('/api/test-scan', async (req, res) => {
+  try {
+    const { qrCode } = req.body;
+    const db = req.app.locals.db;
+    
+    console.log('Testing scan for QR code:', qrCode);
+    
+    const [users] = await db.execute(
+      'SELECT * FROM users WHERE qr_code = ?',
+      [qrCode]
+    );
+    
+    console.log('Found users:', users.length);
+    
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'Invalid QR code' });
+    }
+    
+    const user = users[0];
+    res.json({
+      success: true,
+      message: 'QR code found!',
+      user: {
+        id: user.id,
+        name: `${user.first_name} ${user.last_name}`,
+        email: user.email,
+        totalVisits: user.total_visits
+      }
+    });
+  } catch (error) {
+    console.error('Test scan error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Database setup endpoint
 app.post('/api/setup-db', async (req, res) => {
   try {
