@@ -40,24 +40,27 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     }
 
     // Record regular visit
-    await db.execute('START TRANSACTION');
+    const connection = await db.getConnection();
+    await connection.beginTransaction();
 
-    // Insert visit record
-    await db.execute(
-      'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
-      [user.id, isFreeVisit, req.admin.id]
-    );
+    try {
+      // Insert visit record
+      await connection.execute(
+        'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
+        [user.id, isFreeVisit, req.admin.id]
+      );
 
-    // Update user visit count
-    const newTotalVisits = user.total_visits + 1;
-    const newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
+      // Update user visit count
+      const newTotalVisits = user.total_visits + 1;
+      const newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
 
-    await db.execute(
-      'UPDATE users SET total_visits = ?, free_visits_earned = ? WHERE id = ?',
-      [newTotalVisits, newFreeVisitsEarned, user.id]
-    );
+      await connection.execute(
+        'UPDATE users SET total_visits = ?, free_visits_earned = ? WHERE id = ?',
+        [newTotalVisits, newFreeVisitsEarned, user.id]
+      );
 
-    await db.execute('COMMIT');
+      await connection.commit();
+      connection.release();
 
     res.json({
       success: true,
@@ -69,13 +72,12 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
         nextFreeVisitIn: 5 - (newTotalVisits % 5)
       }
     });
-  } catch (error) {
-    try {
-      const db = req.app.locals.db;
-      await db.execute('ROLLBACK');
-    } catch (rollbackError) {
-      console.error('Rollback error:', rollbackError);
+    } catch (transactionError) {
+      await connection.rollback();
+      connection.release();
+      throw transactionError;
     }
+  } catch (error) {
     console.error('Scan error:', error);
     console.error('Admin ID:', req.admin?.id);
     console.error('User ID:', req.body?.qrCode);
@@ -105,13 +107,15 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
     const user = users[0];
     const isFreeVisit = useFreeVisit === true;
 
-    await db.execute('START TRANSACTION');
+    const connection = await db.getConnection();
+    await connection.beginTransaction();
 
-    // Insert visit record
-    await db.execute(
-      'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
-      [user.id, isFreeVisit, req.admin.id]
-    );
+    try {
+      // Insert visit record
+      await connection.execute(
+        'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
+        [user.id, isFreeVisit, req.admin.id]
+      );
 
     let newTotalVisits = user.total_visits;
     let newFreeVisitsEarned = user.free_visits_earned;
@@ -126,12 +130,13 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
       newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
     }
 
-    await db.execute(
-      'UPDATE users SET total_visits = ?, free_visits_earned = ?, free_visits_used = ? WHERE id = ?',
-      [newTotalVisits, newFreeVisitsEarned, newFreeVisitsUsed, user.id]
-    );
+      await connection.execute(
+        'UPDATE users SET total_visits = ?, free_visits_earned = ?, free_visits_used = ? WHERE id = ?',
+        [newTotalVisits, newFreeVisitsEarned, newFreeVisitsUsed, user.id]
+      );
 
-    await db.execute('COMMIT');
+      await connection.commit();
+      connection.release();
 
     res.json({
       success: true,
@@ -144,13 +149,12 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
         nextFreeVisitIn: isFreeVisit ? null : 5 - (newTotalVisits % 5)
       }
     });
-  } catch (error) {
-    try {
-      const db = req.app.locals.db;
-      await db.execute('ROLLBACK');
-    } catch (rollbackError) {
-      console.error('Rollback error:', rollbackError);
+    } catch (transactionError) {
+      await connection.rollback();
+      connection.release();
+      throw transactionError;
     }
+  } catch (error) {
     console.error('Free visit error:', error);
     console.error('Admin ID:', req.admin?.id);
     res.status(500).json({ 
