@@ -77,7 +77,13 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
       console.error('Rollback error:', rollbackError);
     }
     console.error('Scan error:', error);
-    res.status(500).json({ error: 'Failed to record visit' });
+    console.error('Admin ID:', req.admin?.id);
+    console.error('User ID:', req.body?.qrCode);
+    res.status(500).json({ 
+      error: 'Failed to record visit',
+      details: error.message,
+      adminId: req.admin?.id
+    });
   }
 });
 
@@ -146,7 +152,12 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
       console.error('Rollback error:', rollbackError);
     }
     console.error('Free visit error:', error);
-    res.status(500).json({ error: 'Failed to process visit' });
+    console.error('Admin ID:', req.admin?.id);
+    res.status(500).json({ 
+      error: 'Failed to process visit',
+      details: error.message,
+      adminId: req.admin?.id
+    });
   }
 });
 

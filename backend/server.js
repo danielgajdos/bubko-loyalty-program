@@ -6,6 +6,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
+const { authenticateAdmin } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -136,6 +137,21 @@ app.get('/api/debug/qr-codes', async (req, res) => {
     });
   } catch (error) {
     console.error('Debug QR codes error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Debug endpoint to check admin token info
+app.get('/api/debug/admin-info', authenticateAdmin, async (req, res) => {
+  try {
+    res.json({
+      adminInfo: req.admin,
+      adminId: req.admin.id,
+      adminType: req.admin.type,
+      adminUsername: req.admin.username
+    });
+  } catch (error) {
+    console.error('Debug admin info error:', error);
     res.status(500).json({ error: error.message });
   }
 });
