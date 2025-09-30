@@ -39,14 +39,14 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
       });
     }
 
-    // Record regular visit - use promisify for callback-based mysql2
+    // Record regular visit - add scanned_by field back
     const { promisify } = require('util');
     const query = promisify(db.query).bind(db);
     
-    // Insert visit record
+    // Insert visit record with admin ID
     await query(
-      'INSERT INTO visits (user_id, is_free_visit) VALUES (?, ?)',
-      [user.id, isFreeVisit ? 1 : 0]
+      'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
+      [user.id, isFreeVisit ? 1 : 0, req.admin.id]
     );
 
     // Update user visit count
@@ -99,9 +99,12 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
     const isFreeVisit = useFreeVisit === true;
 
     // Insert visit record
-    await db.query(
-      'INSERT INTO visits (user_id, is_free_visit) VALUES (?, ?)',
-      [user.id, isFreeVisit ? 1 : 0]
+    const { promisify } = require('util');
+    const query = promisify(db.query).bind(db);
+    
+    await query(
+      'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
+      [user.id, isFreeVisit ? 1 : 0, req.admin.id]
     );
 
     let newTotalVisits = user.total_visits;
