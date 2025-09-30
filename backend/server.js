@@ -53,6 +53,22 @@ app.get('/api/debug/users', async (req, res) => {
   }
 });
 
+// Test QR code endpoint
+app.get('/api/test-qr/:qrCode', async (req, res) => {
+  try {
+    const { qrCode } = req.params;
+    const db = req.app.locals.db;
+    const result = await db.query('SELECT id, email, first_name, last_name, qr_code FROM users WHERE qr_code = $1', [qrCode]);
+    if (result.rows.length > 0) {
+      res.json({ found: true, user: result.rows[0] });
+    } else {
+      res.json({ found: false, message: 'QR code not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Database setup endpoint
 app.post('/api/setup-db', async (req, res) => {
   try {
