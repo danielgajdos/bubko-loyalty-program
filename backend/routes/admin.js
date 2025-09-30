@@ -39,10 +39,11 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
       });
     }
 
-    // Record regular visit - test with string interpolation (not recommended for production)
+    // Record regular visit - fix boolean conversion for MySQL
     // Insert visit record
     await db.query(
-      `INSERT INTO visits (user_id, is_free_visit) VALUES (${user.id}, ${isFreeVisit})`
+      'INSERT INTO visits (user_id, is_free_visit) VALUES (?, ?)',
+      [user.id, isFreeVisit ? 1 : 0]
     );
 
     // Update user visit count
@@ -97,7 +98,7 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
     // Insert visit record
     await db.query(
       'INSERT INTO visits (user_id, is_free_visit) VALUES (?, ?)',
-      [user.id, isFreeVisit]
+      [user.id, isFreeVisit ? 1 : 0]
     );
 
     let newTotalVisits = user.total_visits;
