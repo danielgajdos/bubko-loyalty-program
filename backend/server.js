@@ -87,20 +87,20 @@ app.post('/api/test-scan', async (req, res) => {
   try {
     const { qrCode } = req.body;
     const db = req.app.locals.db;
-    
+
     console.log('Testing scan for QR code:', qrCode);
-    
+
     const [users] = await db.execute(
       'SELECT * FROM users WHERE qr_code = ?',
       [qrCode]
     );
-    
+
     console.log('Found users:', users.length);
-    
+
     if (users.length === 0) {
       return res.status(404).json({ error: 'Invalid QR code' });
     }
-    
+
     const user = users[0];
     res.json({
       success: true,
@@ -114,6 +114,28 @@ app.post('/api/test-scan', async (req, res) => {
     });
   } catch (error) {
     console.error('Test scan error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Debug endpoint to check all QR codes in database
+app.get('/api/debug/qr-codes', async (req, res) => {
+  try {
+    const db = req.app.locals.db;
+    const [users] = await db.execute('SELECT id, email, first_name, last_name, qr_code FROM users');
+    
+    res.json({
+      totalUsers: users.length,
+      users: users.map(user => ({
+        id: user.id,
+        email: user.email,
+        name: `${user.first_name} ${user.last_name}`,
+        qrCode: user.qr_code,
+        qrCodeLength: user.qr_code ? user.qr_code.length : 0
+      }))
+    });
+  } catch (error) {
+    console.error('Debug QR codes error:', error);
     res.status(500).json({ error: error.message });
   }
 });
