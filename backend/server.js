@@ -23,16 +23,22 @@ app.use(cors({
 app.use(express.json());
 app.use(express.static('public'));
 
-// Database connection
+// Database connection - explicitly use MySQL
 const dbConfig = {
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
+  host: process.env.DB_HOST || 'mysql.railway.internal',
+  user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  database: process.env.DB_NAME || 'railway',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
 };
+
+console.log('🔗 Connecting to MySQL:', {
+  host: dbConfig.host,
+  user: dbConfig.user,
+  database: dbConfig.database
+});
 
 const pool = mysql.createPool(dbConfig);
 
