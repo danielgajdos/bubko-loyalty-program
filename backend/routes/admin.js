@@ -39,9 +39,9 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
       });
     }
 
-    // Record regular visit - test without scanned_by field first
+    // Record regular visit - use db.query instead of db.execute
     // Insert visit record
-    await db.execute(
+    await db.query(
       'INSERT INTO visits (user_id, is_free_visit) VALUES (?, ?)',
       [user.id, isFreeVisit]
     );
@@ -50,7 +50,7 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     const newTotalVisits = user.total_visits + 1;
     const newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
 
-    await db.execute(
+    await db.query(
       'UPDATE users SET total_visits = ?, free_visits_earned = ? WHERE id = ?',
       [newTotalVisits, newFreeVisitsEarned, user.id]
     );
@@ -96,7 +96,7 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
     const isFreeVisit = useFreeVisit === true;
 
     // Insert visit record
-    await db.execute(
+    await db.query(
       'INSERT INTO visits (user_id, is_free_visit) VALUES (?, ?)',
       [user.id, isFreeVisit]
     );
@@ -114,7 +114,7 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
       newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
     }
 
-    await db.execute(
+    await db.query(
       'UPDATE users SET total_visits = ?, free_visits_earned = ?, free_visits_used = ? WHERE id = ?',
       [newTotalVisits, newFreeVisitsEarned, newFreeVisitsUsed, user.id]
     );
