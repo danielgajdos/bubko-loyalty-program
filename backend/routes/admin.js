@@ -39,11 +39,11 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
       });
     }
 
-    // Record regular visit - simplified without explicit transactions for now
+    // Record regular visit - test without scanned_by field first
     // Insert visit record
     await db.execute(
-      'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
-      [user.id, isFreeVisit, req.admin.id]
+      'INSERT INTO visits (user_id, is_free_visit) VALUES (?, ?)',
+      [user.id, isFreeVisit]
     );
 
     // Update user visit count
@@ -97,8 +97,8 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
 
     // Insert visit record
     await db.execute(
-      'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
-      [user.id, isFreeVisit, req.admin.id]
+      'INSERT INTO visits (user_id, is_free_visit) VALUES (?, ?)',
+      [user.id, isFreeVisit]
     );
 
     let newTotalVisits = user.total_visits;
