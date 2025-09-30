@@ -13,11 +13,10 @@ router.post('/register', async (req, res) => {
     const db = req.app.locals.db;
 
     // Check if user exists
-    const existingResult = await db.query(
-      'SELECT id FROM users WHERE email = $1',
+    const [existingUsers] = await db.query(
+      'SELECT id FROM users WHERE email = ?',
       [email]
     );
-    const existingUsers = existingResult.rows;
 
     if (existingUsers.length > 0) {
       return res.status(400).json({ error: 'Email already registered' });
@@ -30,8 +29,8 @@ router.post('/register', async (req, res) => {
     const qrCode = uuidv4();
 
     // Insert user
-    const result = await db.query(
-      'INSERT INTO users (email, password_hash, first_name, last_name, phone, qr_code) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+    const [result] = await db.query(
+      'INSERT INTO users (email, password_hash, first_name, last_name, phone, qr_code) VALUES (?, ?, ?, ?, ?, ?)',
       [email, passwordHash, firstName, lastName, phone, qrCode]
     );
 
@@ -40,7 +39,7 @@ router.post('/register', async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: result.rows[0].id, email, type: 'user' },
+      { id: result.insertId, email, type: 'user' },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -49,7 +48,7 @@ router.post('/register', async (req, res) => {
       message: 'Registration successful',
       token,
       user: {
-        id: result.rows[0].id,
+        id: result.insertId,
         email,
         firstName,
         lastName,
@@ -70,11 +69,10 @@ router.post('/login', async (req, res) => {
     const db = req.app.locals.db;
 
     // Find user
-    const result = await db.query(
-      'SELECT * FROM users WHERE email = $1',
+    const [users] = await db.query(
+      'SELECT * FROM users WHERE email = ?',
       [email]
     );
-    const users = result.rows;
 
     if (users.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -126,11 +124,10 @@ router.post('/admin/login', async (req, res) => {
     const db = req.app.locals.db;
 
     // Find admin
-    const adminResult = await db.query(
-      'SELECT * FROM admin_users WHERE username = $1',
+    const [admins] = await db.query(
+      'SELECT * FROM admin_users WHERE username = ?',
       [username]
     );
-    const admins = adminResult.rows;
 
     if (admins.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });

@@ -9,11 +9,10 @@ router.get('/profile', authenticateToken, async (req, res) => {
   try {
     const db = req.app.locals.db;
     
-    const result = await db.query(
-      'SELECT id, email, first_name, last_name, phone, total_visits, free_visits_earned, free_visits_used, qr_code FROM users WHERE id = $1',
+    const [users] = await db.query(
+      'SELECT id, email, first_name, last_name, phone, total_visits, free_visits_earned, free_visits_used, qr_code FROM users WHERE id = ?',
       [req.user.id]
     );
-    const users = result.rows;
 
     if (users.length === 0) {
       return res.status(404).json({ error: 'User not found' });
@@ -46,11 +45,10 @@ router.get('/visits', authenticateToken, async (req, res) => {
   try {
     const db = req.app.locals.db;
     
-    const result = await db.query(
-      'SELECT visit_date, is_free_visit FROM visits WHERE user_id = $1 ORDER BY visit_date DESC',
+    const [visits] = await db.query(
+      'SELECT visit_date, is_free_visit FROM visits WHERE user_id = ? ORDER BY visit_date DESC',
       [req.user.id]
     );
-    const visits = result.rows;
 
     res.json(visits);
   } catch (error) {

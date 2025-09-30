@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { Pool } = require('pg');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -24,10 +24,17 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+const dbConfig = {
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+};
+
+const pool = mysql.createPool(dbConfig);
 
 // Make database available to routes
 app.locals.db = pool;
@@ -46,8 +53,8 @@ app.get('/api/health', (req, res) => {
 app.get('/api/debug/users', async (req, res) => {
   try {
     const db = req.app.locals.db;
-    const result = await db.query('SELECT id, email, qr_code FROM users LIMIT 5');
-    res.json(result.rows);
+    const [rows] = await db.execute('SELECT id, email, qr_code FROM users LIMIT 5');
+    res.json(rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -58,9 +65,9 @@ app.get('/api/test-qr/:qrCode', async (req, res) => {
   try {
     const { qrCode } = req.params;
     const db = req.app.locals.db;
-    const result = await db.query('SELECT id, email, first_name, last_name, qr_code FROM users WHERE qr_code = $1', [qrCode]);
-    if (result.rows.length > 0) {
-      res.json({ found: true, user: result.rows[0] });
+    const [rows] = await db.execute('SELECT id, email, first_name, last_name, qr_code FROM users WHERE qr_code = ?', [qrCode]);
+    if (rows.length > 0) {
+      res.json({ found: true, user: rows[0] });
     } else {
       res.json({ found: false, message: 'QR code not found' });
     }
@@ -73,11 +80,11 @@ app.get('/api/test-qr/:qrCode', async (req, res) => {
 app.post('/api/setup-db', async (req, res) => {
   try {
     const db = req.app.locals.db;
-    
+
     // Create users table
-    await db.query(`
+    await db.execute(`
       CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
+        id INT AUTO_INCREMENT PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         first_name VARCHAR(100) NOT NULL,
@@ -88,26 +95,26 @@ app.post('/api/setup-db', async (req, res) => {
         free_visits_earned INT DEFAULT 0,
         free_visits_used INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
 
     // Create admin_users table
-    await db.query(`
+    await db.execute(`
       CREATE TABLE IF NOT EXISTS admin_users (
-        id SERIAL PRIMARY KEY,
+        id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(100) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         email VARCHAR(255) NOT NULL,
-        role VARCHAR(10) DEFAULT 'staff' CHECK (role IN ('admin', 'staff')),
+        role ENUM('admin', 'staff') DEFAULT 'staff',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
     // Create visits table
-    await db.query(`
+    await db.execute(`
       CREATE TABLE IF NOT EXISTS visits (
-        id SERIAL PRIMARY KEY,
+        id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
         visit_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_free_visit BOOLEAN DEFAULT FALSE,
@@ -120,21 +127,21 @@ app.post('/api/setup-db', async (req, res) => {
     // Create default admin user
     const bcrypt = require('bcrypt');
     const adminPasswordHash = await bcrypt.hash('admin123', 10);
-    await db.query(
-      'INSERT INTO admin_users (username, password_hash, email, role) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO NOTHING',
+    await db.execute(
+      'INSERT IGNORE INTO admin_users (username, password_hash, email, role) VALUES (?, ?, ?, ?)',
       ['admin', adminPasswordHash, 'admin@bubko.sk', 'admin']
     );
 
-    res.json({ 
-      success: true, 
-      message: 'Database setup completed successfully!' 
+    res.json({
+      success: true,
+      message: 'Database setup completed successfully!'
     });
   } catch (error) {
     console.error('Database setup error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Database setup failed', 
-      details: error.message 
+    res.status(500).json({
+      success: false,
+      error: 'Database setup failed',
+      details: error.message
     });
   }
 });
