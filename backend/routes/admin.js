@@ -39,11 +39,10 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
       });
     }
 
-    // Record regular visit - use db.query instead of db.execute
+    // Record regular visit - test with string interpolation (not recommended for production)
     // Insert visit record
     await db.query(
-      'INSERT INTO visits (user_id, is_free_visit) VALUES (?, ?)',
-      [user.id, isFreeVisit]
+      `INSERT INTO visits (user_id, is_free_visit) VALUES (${user.id}, ${isFreeVisit})`
     );
 
     // Update user visit count
