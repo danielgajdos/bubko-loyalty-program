@@ -147,5 +147,5 @@ app.post('/api/setup-db', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🎈 Bubko Loyalty API running on port ${PORT}`);
+  console.log(`🎈 Bubko Loyalty API running on port ${PORT} - MySQL ready`);
 });
