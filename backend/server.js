@@ -158,6 +158,41 @@ app.get('/api/debug/admin-info', authenticateAdmin, async (req, res) => {
   }
 });
 
+// Database migration endpoint to add barcode column
+app.post('/api/migrate-db', async (req, res) => {
+  try {
+    const db = req.app.locals.db;
+
+    // Add barcode column to existing users table
+    try {
+      await db.execute('ALTER TABLE users ADD COLUMN barcode VARCHAR(255) UNIQUE');
+      console.log('✅ Added barcode column');
+    } catch (error) {
+      if (error.code === 'ER_DUP_FIELDNAME') {
+        console.log('ℹ️ Barcode column already exists');
+      } else {
+        throw error;
+      }
+    }
+
+    // Update existing users to have barcode = qr_code
+    await db.execute('UPDATE users SET barcode = qr_code WHERE barcode IS NULL');
+    console.log('✅ Updated existing users with barcode values');
+
+    res.json({
+      success: true,
+      message: 'Database migration completed successfully!'
+    });
+  } catch (error) {
+    console.error('Migration error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Database migration failed',
+      details: error.message
+    });
+  }
+});
+
 // Database setup endpoint
 app.post('/api/setup-db', async (req, res) => {
   try {
