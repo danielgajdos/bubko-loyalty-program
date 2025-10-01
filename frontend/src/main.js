@@ -10,6 +10,7 @@ import Profile from './pages/Profile.vue'
 import AdminLogin from './pages/AdminLogin.vue'
 import AdminDashboard from './pages/AdminDashboard.vue'
 import Scanner from './pages/Scanner.vue'
+import UserManagement from './pages/UserManagement.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -18,6 +19,7 @@ const routes = [
   { path: '/profile', component: Profile, meta: { requiresAuth: true } },
   { path: '/admin', component: AdminLogin },
   { path: '/admin/dashboard', component: AdminDashboard, meta: { requiresAdmin: true } },
+  { path: '/admin/users', component: UserManagement, meta: { requiresAdmin: true } },
   { path: '/admin/scanner', component: Scanner, meta: { requiresAdmin: true } }
 ]
 

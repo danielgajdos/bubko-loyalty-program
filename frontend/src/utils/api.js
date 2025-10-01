@@ -36,5 +36,12 @@ export default {
   // Admin endpoints
   scanQR: (qrCode) => api.post('/admin/scan', { qrCode }),
   confirmFreeVisit: (qrCode, useFreeVisit) => api.post('/admin/scan/free', { qrCode, useFreeVisit }),
-  getDashboard: () => api.get('/admin/dashboard')
+  getDashboard: () => api.get('/admin/dashboard'),
+  
+  // Admin user management endpoints
+  getAllUsers: () => api.get('/admin/users'),
+  updateUser: (userId, userData) => api.put(`/admin/users/${userId}`, userData),
+  assignQRCode: (userId, qrCode) => api.put(`/admin/users/${userId}/qr-code`, { qrCode }),
+  quickRegister: (userData) => api.post('/admin/quick-register', userData),
+  deleteUser: (userId) => api.delete(`/admin/users/${userId}`)
 }

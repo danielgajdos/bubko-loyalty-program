@@ -4,6 +4,9 @@
       <div class="dashboard-header">
         <h1 class="title">📊 Admin Dashboard</h1>
         <div class="header-actions">
+          <router-link to="/admin/users" class="btn btn-primary">
+            <i class="fas fa-users"></i> Správa používateľov
+          </router-link>
           <router-link to="/admin/scanner" class="btn btn-primary">
             <i class="fas fa-qrcode"></i> QR Skener
           </router-link>
@@ -70,6 +73,9 @@
             </div>
           </div>
         </div>
+        
+        <!-- Analytics Section -->
+        <AdminAnalytics :stats="stats" />
       </div>
       
       <div v-else class="loading">
@@ -81,9 +87,13 @@
 
 <script>
 import api from '../utils/api'
+import AdminAnalytics from '../components/AdminAnalytics.vue'
 
 export default {
   name: 'AdminDashboard',
+  components: {
+    AdminAnalytics
+  },
   data() {
     return {
       stats: null,

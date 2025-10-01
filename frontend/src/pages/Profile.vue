@@ -45,27 +45,63 @@
           </div>
         </div>
         
-        <div class="card qr-card">
+        <div class="card codes-card">
           <h3 style="color: #333; margin-bottom: 20px; text-align: center;">
-            Tvoj vesmírny QR kód 🛸
+            Tvoje vesmírne kódy 🛸
           </h3>
-          <div class="qr-container">
-            <img :src="user.qrCode" alt="QR Code" class="qr-code">
-            <div class="qr-text-backup">
+          
+          <div class="codes-tabs">
+            <button 
+              @click="activeTab = 'qr'" 
+              :class="['tab-btn', { active: activeTab === 'qr' }]"
+            >
+              📱 QR Kód
+            </button>
+            <button 
+              @click="activeTab = 'barcode'" 
+              :class="['tab-btn', { active: activeTab === 'barcode' }]"
+            >
+              📊 Čiarový kód
+            </button>
+          </div>
+
+          <div v-if="activeTab === 'qr'" class="code-container">
+            <div class="code-display">
+              <img :src="user.qrCode" alt="QR Code" class="qr-code">
+            </div>
+            <div class="code-text-backup">
               <p style="color: #333; font-weight: 600; margin: 15px 0 5px 0;">
                 Záložný kód (ak nefunguje skenovanie):
               </p>
-              <div class="qr-text-code">
+              <div class="code-text">
                 {{ user.qrCodeText }}
               </div>
-              <button @click="copyQrCode" class="btn-copy">
+              <button @click="copyCode(user.qrCodeText)" class="btn-copy">
                 <i class="fas fa-copy"></i> Kopírovať kód
               </button>
             </div>
-            <p style="color: #666; text-align: center; margin-top: 15px;">
-              Ukáž tento kód pri vstupe do vesmírnej stanice
-            </p>
           </div>
+
+          <div v-if="activeTab === 'barcode'" class="code-container">
+            <div class="code-display">
+              <canvas ref="barcodeCanvas" class="barcode"></canvas>
+            </div>
+            <div class="code-text-backup">
+              <p style="color: #333; font-weight: 600; margin: 15px 0 5px 0;">
+                Čiarový kód:
+              </p>
+              <div class="code-text">
+                {{ user.qrCodeText }}
+              </div>
+              <button @click="copyCode(user.qrCodeText)" class="btn-copy">
+                <i class="fas fa-copy"></i> Kopírovať kód
+              </button>
+            </div>
+          </div>
+          
+          <p style="color: #666; text-align: center; margin-top: 15px;">
+            Ukáž tento kód pri vstupe do vesmírnej stanice
+          </p>
         </div>
         
         <div class="card visits-card" v-if="visits.length > 0">
@@ -106,6 +142,7 @@
 
 <script>
 import api from '../utils/api'
+import JsBarcode from 'jsbarcode'
 
 export default {
   name: 'Profile',
@@ -113,7 +150,8 @@ export default {
     return {
       user: null,
       visits: [],
-      loading: true
+      loading: true,
+      activeTab: 'qr'
     }
   },
   computed: {
@@ -129,6 +167,22 @@ export default {
   async mounted() {
     await this.loadProfile()
     await this.loadVisits()
+  },
+  watch: {
+    activeTab(newTab) {
+      if (newTab === 'barcode' && this.user) {
+        this.$nextTick(() => {
+          this.generateBarcode()
+        })
+      }
+    },
+    user(newUser) {
+      if (newUser && this.activeTab === 'barcode') {
+        this.$nextTick(() => {
+          this.generateBarcode()
+        })
+      }
+    }
   },
   methods: {
     async loadProfile() {
@@ -164,11 +218,28 @@ export default {
       localStorage.removeItem('token')
       this.$router.push('/')
     },
-    async copyQrCode() {
+    generateBarcode() {
+      if (this.$refs.barcodeCanvas && this.user?.qrCodeText) {
+        try {
+          JsBarcode(this.$refs.barcodeCanvas, this.user.qrCodeText, {
+            format: "CODE128",
+            width: 2,
+            height: 100,
+            displayValue: false,
+            background: "#ffffff",
+            lineColor: "#000000",
+            margin: 10
+          })
+        } catch (error) {
+          console.error('Failed to generate barcode:', error)
+        }
+      }
+    },
+    async copyCode(text) {
       try {
-        await navigator.clipboard.writeText(this.user.qrCodeText)
+        await navigator.clipboard.writeText(text)
         // Show success feedback
-        const button = document.querySelector('.btn-copy')
+        const button = event.target.closest('.btn-copy')
         const originalText = button.innerHTML
         button.innerHTML = '<i class="fas fa-check"></i> Skopírované!'
         button.style.background = '#4caf50'
@@ -180,7 +251,7 @@ export default {
       } catch (error) {
         console.error('Failed to copy:', error)
         // Fallback: select text
-        const textElement = document.querySelector('.qr-text-code')
+        const textElement = document.querySelector('.code-text')
         const range = document.createRange()
         range.selectNode(textElement)
         window.getSelection().removeAllRanges()
@@ -253,8 +324,42 @@ export default {
   transition: width 0.3s ease;
 }
 
-.qr-container {
+.codes-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  border: 2px solid #4ecdc4;
+  background: white;
+  color: #4ecdc4;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.tab-btn.active {
+  background: linear-gradient(45deg, #4ecdc4, #96ceb4);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
+}
+
+.tab-btn:hover:not(.active) {
+  background: #f0f9ff;
+  transform: translateY(-1px);
+}
+
+.code-container {
   text-align: center;
+}
+
+.code-display {
+  margin-bottom: 20px;
 }
 
 .qr-code {
@@ -265,6 +370,14 @@ export default {
   border-radius: 15px;
   padding: 10px;
   background: white;
+}
+
+.barcode {
+  border: 3px solid #4ecdc4;
+  border-radius: 15px;
+  padding: 10px;
+  background: white;
+  max-width: 100%;
 }
 
 .visits-list {
@@ -305,7 +418,7 @@ export default {
   font-size: 0.8rem;
 }
 
-.qr-text-backup {
+.code-text-backup {
   margin-top: 20px;
   padding: 15px;
   background: #f8f9fa;
@@ -313,7 +426,7 @@ export default {
   border: 2px dashed #ddd;
 }
 
-.qr-text-code {
+.code-text {
   font-family: 'Courier New', monospace;
   font-size: 1.1rem;
   font-weight: bold;
