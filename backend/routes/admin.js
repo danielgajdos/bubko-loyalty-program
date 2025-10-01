@@ -176,4 +176,240 @@ router.get('/dashboard', authenticateAdmin, async (req, res) => {
   }
 });
 
+// 1. Get all registered users with visit details
+router.get('/users', authenticateAdmin, async (req, res) => {
+  try {
+    const db = req.app.locals.db;
+
+    // Get all users with their visit statistics
+    const [users] = await db.execute(`
+      SELECT 
+        id, 
+        email, 
+        first_name, 
+        last_name, 
+        phone, 
+        qr_code, 
+        barcode,
+        total_visits, 
+        free_visits_earned, 
+        free_visits_used,
+        (free_visits_earned - free_visits_used) as available_free_visits,
+        created_at
+      FROM users 
+      ORDER BY created_at DESC
+    `);
+
+    res.json({
+      success: true,
+      users: users
+    });
+  } catch (error) {
+    console.error('Get users error:', error);
+    res.status(500).json({ error: 'Failed to get users' });
+  }
+});
+
+// 2. Update user visit counts (edit functionality)
+router.put('/users/:userId', authenticateAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { totalVisits, freeVisitsEarned, freeVisitsUsed } = req.body;
+    const db = req.app.locals.db;
+
+    // Update user visit counts
+    await db.execute(
+      `UPDATE users SET 
+        total_visits = ${totalVisits}, 
+        free_visits_earned = ${freeVisitsEarned}, 
+        free_visits_used = ${freeVisitsUsed} 
+      WHERE id = ${userId}`
+    );
+
+    // Get updated user data
+    const [users] = await db.execute(
+      'SELECT * FROM users WHERE id = ?',
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      message: 'User updated successfully',
+      user: users[0]
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ 
+      error: 'Failed to update user',
+      details: error.message 
+    });
+  }
+});
+
+// 3. Assign new QR code to existing user
+router.put('/users/:userId/qr-code', authenticateAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { qrCode } = req.body;
+    const db = req.app.locals.db;
+
+    // Check if QR code is already in use
+    const [existingUsers] = await db.execute(
+      'SELECT id FROM users WHERE (qr_code = ? OR barcode = ?) AND id != ?',
+      [qrCode, qrCode, userId]
+    );
+
+    if (existingUsers.length > 0) {
+      return res.status(400).json({ 
+        error: 'QR code already assigned to another user' 
+      });
+    }
+
+    // Update user's QR code and barcode
+    await db.execute(
+      `UPDATE users SET qr_code = '${qrCode}', barcode = '${qrCode}' WHERE id = ${userId}`
+    );
+
+    // Get updated user data
+    const [users] = await db.execute(
+      'SELECT * FROM users WHERE id = ?',
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      message: 'QR code assigned successfully',
+      user: users[0]
+    });
+  } catch (error) {
+    console.error('Assign QR code error:', error);
+    res.status(500).json({ 
+      error: 'Failed to assign QR code',
+      details: error.message 
+    });
+  }
+});
+
+// 4. Quick registration for offline users (admin creates account)
+router.post('/quick-register', authenticateAdmin, async (req, res) => {
+  try {
+    const { firstName, lastName, qrCode, phone, email } = req.body;
+    const db = req.app.locals.db;
+
+    // Validate required fields
+    if (!firstName || !lastName || !qrCode) {
+      return res.status(400).json({ 
+        error: 'First name, last name, and QR code are required' 
+      });
+    }
+
+    // Check if QR code is already in use
+    const [existingUsers] = await db.execute(
+      'SELECT id FROM users WHERE qr_code = ? OR barcode = ?',
+      [qrCode, qrCode]
+    );
+
+    if (existingUsers.length > 0) {
+      return res.status(400).json({ 
+        error: 'QR code already assigned to another user' 
+      });
+    }
+
+    // Check if email is provided and not already in use
+    if (email) {
+      const [existingEmail] = await db.execute(
+        'SELECT id FROM users WHERE email = ?',
+        [email]
+      );
+
+      if (existingEmail.length > 0) {
+        return res.status(400).json({ 
+          error: 'Email already registered' 
+        });
+      }
+    }
+
+    // Generate a temporary password hash (user won't use it for login)
+    const bcrypt = require('bcrypt');
+    const tempPassword = Math.random().toString(36).substring(7);
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+    // Create user account
+    const [result] = await db.execute(
+      `INSERT INTO users (
+        email, 
+        password_hash, 
+        first_name, 
+        last_name, 
+        phone, 
+        qr_code, 
+        barcode,
+        total_visits,
+        free_visits_earned,
+        free_visits_used
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, 0)`,
+      [
+        email || `offline_${Date.now()}@bubko.sk`, // Generate email if not provided
+        passwordHash,
+        firstName,
+        lastName,
+        phone || null,
+        qrCode,
+        qrCode
+      ]
+    );
+
+    // Get the created user
+    const [users] = await db.execute(
+      'SELECT * FROM users WHERE id = ?',
+      [result.insertId]
+    );
+
+    res.json({
+      success: true,
+      message: 'User registered successfully',
+      user: {
+        id: users[0].id,
+        firstName: users[0].first_name,
+        lastName: users[0].last_name,
+        email: users[0].email,
+        phone: users[0].phone,
+        qrCode: users[0].qr_code,
+        barcode: users[0].barcode,
+        totalVisits: users[0].total_visits,
+        freeVisitsEarned: users[0].free_visits_earned,
+        freeVisitsUsed: users[0].free_visits_used
+      }
+    });
+  } catch (error) {
+    console.error('Quick register error:', error);
+    res.status(500).json({ 
+      error: 'Failed to register user',
+      details: error.message 
+    });
+  }
+});
+
+// 5. Delete user account
+router.delete('/users/:userId', authenticateAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const db = req.app.locals.db;
+
+    // Delete user (visits will be deleted automatically due to foreign key cascade)
+    await db.execute(`DELETE FROM users WHERE id = ${userId}`);
+
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ 
+      error: 'Failed to delete user',
+      details: error.message 
+    });
+  }
+});
+
 module.exports = router;
