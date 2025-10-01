@@ -25,17 +25,21 @@ router.post('/register', async (req, res) => {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
     
-    // Generate unique QR code
+    // Generate unique QR code and barcode (same value)
     const qrCode = uuidv4();
+    const barcode = qrCode; // Same code for both QR and barcode
 
     // Insert user
     const [result] = await db.execute(
-      'INSERT INTO users (email, password_hash, first_name, last_name, phone, qr_code) VALUES (?, ?, ?, ?, ?, ?)',
-      [email, passwordHash, firstName, lastName, phone, qrCode]
+      'INSERT INTO users (email, password_hash, first_name, last_name, phone, qr_code, barcode) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [email, passwordHash, firstName, lastName, phone, qrCode, barcode]
     );
 
     // Generate QR code image
     const qrCodeDataURL = await QRCode.toDataURL(qrCode);
+    
+    // Generate barcode image (using same QR code library for simplicity)
+    const barcodeDataURL = await QRCode.toDataURL(barcode);
 
     // Generate JWT token
     const token = jwt.sign(
@@ -53,7 +57,9 @@ router.post('/register', async (req, res) => {
         firstName,
         lastName,
         qrCode: qrCodeDataURL,
-        qrCodeText: qrCode
+        qrCodeText: qrCode,
+        barcode: barcodeDataURL,
+        barcodeText: barcode
       }
     });
   } catch (error) {

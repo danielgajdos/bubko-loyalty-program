@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -72,7 +72,7 @@ app.get('/api/test-qr/:qrCode', async (req, res) => {
   try {
     const { qrCode } = req.params;
     const db = req.app.locals.db;
-    const [rows] = await db.execute('SELECT id, email, first_name, last_name, qr_code FROM users WHERE qr_code = ?', [qrCode]);
+    const [rows] = await db.execute('SELECT id, email, first_name, last_name, qr_code, barcode FROM users WHERE qr_code = ? OR barcode = ?', [qrCode, qrCode]);
     if (rows.length > 0) {
       res.json({ found: true, user: rows[0] });
     } else {
@@ -92,8 +92,8 @@ app.post('/api/test-scan', async (req, res) => {
     console.log('Testing scan for QR code:', qrCode);
 
     const [users] = await db.execute(
-      'SELECT * FROM users WHERE qr_code = ?',
-      [qrCode]
+      'SELECT * FROM users WHERE qr_code = ? OR barcode = ?',
+      [qrCode, qrCode]
     );
 
     console.log('Found users:', users.length);
@@ -123,8 +123,8 @@ app.post('/api/test-scan', async (req, res) => {
 app.get('/api/debug/qr-codes', async (req, res) => {
   try {
     const db = req.app.locals.db;
-    const [users] = await db.execute('SELECT id, email, first_name, last_name, qr_code FROM users');
-    
+    const [users] = await db.execute('SELECT id, email, first_name, last_name, qr_code, barcode FROM users');
+
     res.json({
       totalUsers: users.length,
       users: users.map(user => ({
@@ -132,7 +132,9 @@ app.get('/api/debug/qr-codes', async (req, res) => {
         email: user.email,
         name: `${user.first_name} ${user.last_name}`,
         qrCode: user.qr_code,
-        qrCodeLength: user.qr_code ? user.qr_code.length : 0
+        qrCodeLength: user.qr_code ? user.qr_code.length : 0,
+        barcode: user.barcode,
+        barcodeLength: user.barcode ? user.barcode.length : 0
       }))
     });
   } catch (error) {
@@ -171,6 +173,7 @@ app.post('/api/setup-db', async (req, res) => {
         last_name VARCHAR(100) NOT NULL,
         phone VARCHAR(20),
         qr_code VARCHAR(255) UNIQUE NOT NULL,
+        barcode VARCHAR(255) UNIQUE NOT NULL,
         total_visits INT DEFAULT 0,
         free_visits_earned INT DEFAULT 0,
         free_visits_used INT DEFAULT 0,
@@ -212,11 +215,11 @@ app.post('/api/setup-db', async (req, res) => {
       ['admin', adminPasswordHash, 'admin@bubko.sk', 'admin']
     );
 
-    // Create test user with your specific QR code
+    // Create test user with your specific QR code and barcode
     const testPasswordHash = await bcrypt.hash('test123', 10);
     await db.execute(
-      'INSERT IGNORE INTO users (email, password_hash, first_name, last_name, phone, qr_code) VALUES (?, ?, ?, ?, ?, ?)',
-      ['test@bubko.sk', testPasswordHash, 'Test', 'User', '+421123456789', 'f2093c74-2707-41d3-867c-cb00ed00f699']
+      'INSERT IGNORE INTO users (email, password_hash, first_name, last_name, phone, qr_code, barcode) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      ['test@bubko.sk', testPasswordHash, 'Test', 'User', '+421123456789', 'f2093c74-2707-41d3-867c-cb00ed00f699', 'f2093c74-2707-41d3-867c-cb00ed00f699']
     );
 
     res.json({

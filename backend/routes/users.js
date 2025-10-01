@@ -10,7 +10,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
     const db = req.app.locals.db;
     
     const [users] = await db.execute(
-      'SELECT id, email, first_name, last_name, phone, total_visits, free_visits_earned, free_visits_used, qr_code FROM users WHERE id = ?',
+      'SELECT id, email, first_name, last_name, phone, total_visits, free_visits_earned, free_visits_used, qr_code, barcode FROM users WHERE id = ?',
       [req.user.id]
     );
 
@@ -20,6 +20,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
 
     const user = users[0];
     const qrCodeDataURL = await QRCode.toDataURL(user.qr_code);
+    const barcodeDataURL = await QRCode.toDataURL(user.barcode || user.qr_code);
 
     res.json({
       id: user.id,
@@ -32,7 +33,9 @@ router.get('/profile', authenticateToken, async (req, res) => {
       freeVisitsUsed: user.free_visits_used,
       availableFreeVisits: user.free_visits_earned - user.free_visits_used,
       qrCode: qrCodeDataURL,
-      qrCodeText: user.qr_code
+      qrCodeText: user.qr_code,
+      barcode: barcodeDataURL,
+      barcodeText: user.barcode || user.qr_code
     });
   } catch (error) {
     console.error('Profile error:', error);

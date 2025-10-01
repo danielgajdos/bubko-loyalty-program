@@ -9,10 +9,10 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     const { qrCode } = req.body;
     const db = req.app.locals.db;
 
-    // Find user by QR code
+    // Find user by QR code or barcode
     const [users] = await db.execute(
-      'SELECT * FROM users WHERE qr_code = ?',
-      [qrCode]
+      'SELECT * FROM users WHERE qr_code = ? OR barcode = ?',
+      [qrCode, qrCode]
     );
 
     if (users.length === 0) {
@@ -39,12 +39,9 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
       });
     }
 
-    // Record regular visit - add scanned_by field back
-    const { promisify } = require('util');
-    const query = promisify(db.query).bind(db);
-    
+    // Record regular visit - simplified approach
     // Insert visit record with admin ID
-    await query(
+    await db.execute(
       'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
       [user.id, isFreeVisit ? 1 : 0, req.admin.id]
     );
@@ -53,7 +50,7 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     const newTotalVisits = user.total_visits + 1;
     const newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
 
-    await query(
+    await db.execute(
       'UPDATE users SET total_visits = ?, free_visits_earned = ? WHERE id = ?',
       [newTotalVisits, newFreeVisitsEarned, user.id]
     );
@@ -87,8 +84,8 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
     const db = req.app.locals.db;
 
     const [users] = await db.execute(
-      'SELECT * FROM users WHERE qr_code = ?',
-      [qrCode]
+      'SELECT * FROM users WHERE qr_code = ? OR barcode = ?',
+      [qrCode, qrCode]
     );
 
     if (users.length === 0) {
@@ -99,10 +96,7 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
     const isFreeVisit = useFreeVisit === true;
 
     // Insert visit record
-    const { promisify } = require('util');
-    const query = promisify(db.query).bind(db);
-    
-    await query(
+    await db.execute(
       'INSERT INTO visits (user_id, is_free_visit, scanned_by) VALUES (?, ?, ?)',
       [user.id, isFreeVisit ? 1 : 0, req.admin.id]
     );
@@ -120,7 +114,7 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
       newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
     }
 
-    await db.query(
+    await db.execute(
       'UPDATE users SET total_visits = ?, free_visits_earned = ?, free_visits_used = ? WHERE id = ?',
       [newTotalVisits, newFreeVisitsEarned, newFreeVisitsUsed, user.id]
     );
