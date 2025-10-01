@@ -39,11 +39,10 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
       });
     }
 
-    // Record regular visit - test without scanned_by to isolate issue
-    // Insert visit record without admin ID temporarily
+    // Record regular visit - use raw SQL as workaround for MySQL issue
+    // Insert visit record using string interpolation (temporary workaround)
     await db.execute(
-      'INSERT INTO visits (user_id, is_free_visit) VALUES (?, ?)',
-      [user.id, isFreeVisit ? 1 : 0]
+      `INSERT INTO visits (user_id, is_free_visit) VALUES (${user.id}, ${isFreeVisit ? 1 : 0})`
     );
 
     // Update user visit count
@@ -51,8 +50,7 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     const newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
 
     await db.execute(
-      'UPDATE users SET total_visits = ?, free_visits_earned = ? WHERE id = ?',
-      [newTotalVisits, newFreeVisitsEarned, user.id]
+      `UPDATE users SET total_visits = ${newTotalVisits}, free_visits_earned = ${newFreeVisitsEarned} WHERE id = ${user.id}`
     );
 
     res.json({
@@ -97,8 +95,7 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
 
     // Insert visit record
     await db.execute(
-      'INSERT INTO visits (user_id, is_free_visit) VALUES (?, ?)',
-      [user.id, isFreeVisit ? 1 : 0]
+      `INSERT INTO visits (user_id, is_free_visit) VALUES (${user.id}, ${isFreeVisit ? 1 : 0})`
     );
 
     let newTotalVisits = user.total_visits;
@@ -115,8 +112,7 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
     }
 
     await db.execute(
-      'UPDATE users SET total_visits = ?, free_visits_earned = ?, free_visits_used = ? WHERE id = ?',
-      [newTotalVisits, newFreeVisitsEarned, newFreeVisitsUsed, user.id]
+      `UPDATE users SET total_visits = ${newTotalVisits}, free_visits_earned = ${newFreeVisitsEarned}, free_visits_used = ${newFreeVisitsUsed} WHERE id = ${user.id}`
     );
 
     res.json({
