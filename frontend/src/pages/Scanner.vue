@@ -17,10 +17,31 @@
               Naskenuj QR kód zákazníka
             </h3>
             
+            <!-- Product Type Selection -->
+            <div class="product-selection">
+              <div class="form-group">
+                <label>Typ vstupu:</label>
+                <div class="product-buttons">
+                  <button 
+                    @click="selectedProduct = 'one_child'" 
+                    :class="['product-btn', { active: selectedProduct === 'one_child' }]"
+                  >
+                    👶 1 dieťa
+                  </button>
+                  <button 
+                    @click="selectedProduct = 'two_kids'" 
+                    :class="['product-btn', { active: selectedProduct === 'two_kids' }]"
+                  >
+                    👶👶 2 deti (špeciálna cena)
+                  </button>
+                </div>
+              </div>
+            </div>
+            
             <!-- Manual QR input -->
             <div class="manual-input">
               <div class="form-group">
-                <label for="qrInput">Alebo zadaj QR kód manuálne:</label>
+                <label for="qrInput">Zadaj QR kód manuálne:</label>
                 <div class="input-group">
                   <input 
                     type="text" 
@@ -75,13 +96,15 @@
             
             <div class="customer-info">
               <p><strong>Meno:</strong> {{ scanResult.user.name }}</p>
-              <p><strong>Celkové návštevy:</strong> {{ scanResult.user.totalVisits }}</p>
+              <p><strong>Typ vstupu:</strong> {{ scanResult.user.productLabel }}</p>
+              <p><strong>Návštevy ({{ scanResult.user.productLabel }}):</strong> {{ scanResult.user.currentVisits }}</p>
               <p><strong>Dostupné voľné návštevy:</strong> {{ scanResult.user.availableFreeVisits }}</p>
+              <p class="free-visit-note">⏱️ Voľný vstup = 1 hodina zadarmo</p>
             </div>
             
             <div class="action-buttons">
               <button @click="confirmVisit(true)" class="btn btn-success" :disabled="processing">
-                <i class="fas fa-gift"></i> Použiť voľnú návštevu
+                <i class="fas fa-gift"></i> Použiť voľnú návštevu (1h)
               </button>
               <button @click="confirmVisit(false)" class="btn btn-primary" :disabled="processing">
                 <i class="fas fa-money-bill"></i> Platenú návštevu
@@ -96,10 +119,11 @@
             
             <div class="customer-info">
               <p><strong>Meno:</strong> {{ scanResult.user.name }}</p>
-              <p><strong>Celkové návštevy:</strong> {{ scanResult.user.totalVisits }}</p>
+              <p><strong>Typ vstupu:</strong> {{ scanResult.user.productLabel }}</p>
+              <p><strong>Návštevy ({{ scanResult.user.productLabel }}):</strong> {{ scanResult.user.currentVisits }}</p>
               <p><strong>Získané voľné návštevy:</strong> {{ scanResult.user.freeVisitsEarned }}</p>
               <p v-if="scanResult.user.nextFreeVisitIn">
-                <strong>Do ďalšej voľnej:</strong> {{ scanResult.user.nextFreeVisitIn }} návštev
+                <strong>Do ďalšej voľnej (1h):</strong> {{ scanResult.user.nextFreeVisitIn }} návštev
               </p>
             </div>
             
@@ -135,7 +159,8 @@ export default {
       error: '',
       cameraActive: false,
       cameraSupported: true,
-      qrScanner: null
+      qrScanner: null,
+      selectedProduct: 'one_child' // Default to one child
     }
   },
   mounted() {
@@ -232,7 +257,7 @@ export default {
       this.scanResult = null
       
       try {
-        const response = await api.scanQR(this.manualQrCode.trim())
+        const response = await api.scanQR(this.manualQrCode.trim(), this.selectedProduct)
         this.scanResult = response.data
       } catch (error) {
         this.error = error.response?.data?.error || 'Neplatný QR kód'
@@ -246,7 +271,7 @@ export default {
       this.error = ''
       
       try {
-        const response = await api.confirmFreeVisit(this.manualQrCode.trim(), useFreeVisit)
+        const response = await api.confirmFreeVisit(this.manualQrCode.trim(), useFreeVisit, this.selectedProduct)
         this.scanResult = response.data
       } catch (error) {
         this.error = error.response?.data?.error || 'Chyba pri spracovaní návštevy'
@@ -291,6 +316,46 @@ export default {
   margin-bottom: 30px;
 }
 
+.product-selection {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 15px;
+}
+
+.product-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.product-btn {
+  padding: 15px 30px;
+  border: 2px solid #dee2e6;
+  background: white;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.product-btn:hover {
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+}
+
+.product-btn.active {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
 .input-group {
   display: flex;
   gap: 10px;
@@ -303,6 +368,16 @@ export default {
 .input-group .btn {
   padding: 15px 20px;
   white-space: nowrap;
+}
+
+.free-visit-note {
+  background: #fff3cd;
+  color: #856404;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-weight: 600;
+  text-align: center;
 }
 
 .camera-section {

@@ -6,8 +6,13 @@ const router = express.Router();
 // Scan QR code and record visit
 router.post('/scan', authenticateAdmin, async (req, res) => {
   try {
-    const { qrCode } = req.body;
+    const { qrCode, productType = 'one_child' } = req.body;
     const db = req.app.locals.db;
+
+    // Validate product type
+    if (!['one_child', 'two_kids'].includes(productType)) {
+      return res.status(400).json({ error: 'Invalid product type' });
+    }
 
     // Find user by QR code or barcode
     const [users] = await db.execute(
@@ -20,37 +25,45 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
     }
 
     const user = users[0];
-    let isFreeVisit = false;
 
-    // Check if user has available free visits
-    const availableFreeVisits = user.free_visits_earned - user.free_visits_used;
+    // Get product-specific stats
+    const visitsField = productType === 'one_child' ? 'one_child_visits' : 'two_kids_visits';
+    const freeEarnedField = productType === 'one_child' ? 'one_child_free_earned' : 'two_kids_free_earned';
+    const freeUsedField = productType === 'one_child' ? 'one_child_free_used' : 'two_kids_free_used';
     
+    const currentVisits = user[visitsField] || 0;
+    const freeEarned = user[freeEarnedField] || 0;
+    const freeUsed = user[freeUsedField] || 0;
+    const availableFreeVisits = freeEarned - freeUsed;
+    
+    // Check if user has available free visits for this product type
     if (availableFreeVisits > 0) {
       // Ask admin if they want to use free visit
       return res.json({
         user: {
           id: user.id,
           name: `${user.first_name} ${user.last_name}`,
-          totalVisits: user.total_visits,
-          availableFreeVisits
+          productType: productType,
+          productLabel: productType === 'one_child' ? '1 dieťa' : '2 deti',
+          currentVisits: currentVisits,
+          availableFreeVisits: availableFreeVisits
         },
         hasFreeVisit: true,
-        message: 'User has free visits available. Use free visit?'
+        message: `Používateľ má ${availableFreeVisits} voľných vstupov pre ${productType === 'one_child' ? '1 dieťa' : '2 deti'}. Použiť voľný vstup (1 hodina)?`
       });
     }
 
-    // Record regular visit - use raw SQL as workaround for MySQL issue
-    // Insert visit record using string interpolation (temporary workaround)
+    // Record regular visit
     await db.execute(
-      `INSERT INTO visits (user_id, is_free_visit) VALUES (${user.id}, ${isFreeVisit ? 1 : 0})`
+      `INSERT INTO visits (user_id, product_type, is_free_visit, scanned_by) VALUES (${user.id}, '${productType}', 0, ${req.admin.id})`
     );
 
     // Update user visit count
-    const newTotalVisits = user.total_visits + 1;
-    const newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
+    const newVisits = currentVisits + 1;
+    const newFreeEarned = Math.floor(newVisits / 5);
 
     await db.execute(
-      `UPDATE users SET total_visits = ${newTotalVisits}, free_visits_earned = ${newFreeVisitsEarned} WHERE id = ${user.id}`
+      `UPDATE users SET ${visitsField} = ${newVisits}, ${freeEarnedField} = ${newFreeEarned} WHERE id = ${user.id}`
     );
 
     res.json({
@@ -58,19 +71,18 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
       message: 'Visit recorded successfully',
       user: {
         name: `${user.first_name} ${user.last_name}`,
-        totalVisits: newTotalVisits,
-        freeVisitsEarned: newFreeVisitsEarned,
-        nextFreeVisitIn: 5 - (newTotalVisits % 5)
+        productType: productType,
+        productLabel: productType === 'one_child' ? '1 dieťa' : '2 deti',
+        currentVisits: newVisits,
+        freeVisitsEarned: newFreeEarned,
+        nextFreeVisitIn: 5 - (newVisits % 5)
       }
     });
   } catch (error) {
     console.error('Scan error:', error);
-    console.error('Admin ID:', req.admin?.id);
-    console.error('User ID:', req.body?.qrCode);
     res.status(500).json({ 
       error: 'Failed to record visit',
-      details: error.message,
-      adminId: req.admin?.id
+      details: error.message
     });
   }
 });
@@ -78,8 +90,13 @@ router.post('/scan', authenticateAdmin, async (req, res) => {
 // Confirm free visit usage
 router.post('/scan/free', authenticateAdmin, async (req, res) => {
   try {
-    const { qrCode, useFreeVisit } = req.body;
+    const { qrCode, useFreeVisit, productType = 'one_child' } = req.body;
     const db = req.app.locals.db;
+
+    // Validate product type
+    if (!['one_child', 'two_kids'].includes(productType)) {
+      return res.status(400).json({ error: 'Invalid product type' });
+    }
 
     const [users] = await db.execute(
       'SELECT * FROM users WHERE qr_code = ? OR barcode = ?',
@@ -93,46 +110,55 @@ router.post('/scan/free', authenticateAdmin, async (req, res) => {
     const user = users[0];
     const isFreeVisit = useFreeVisit === true;
 
+    // Get product-specific fields
+    const visitsField = productType === 'one_child' ? 'one_child_visits' : 'two_kids_visits';
+    const freeEarnedField = productType === 'one_child' ? 'one_child_free_earned' : 'two_kids_free_earned';
+    const freeUsedField = productType === 'one_child' ? 'one_child_free_used' : 'two_kids_free_used';
+    
+    const currentVisits = user[visitsField] || 0;
+    const freeEarned = user[freeEarnedField] || 0;
+    const freeUsed = user[freeUsedField] || 0;
+
     // Insert visit record
     await db.execute(
-      `INSERT INTO visits (user_id, is_free_visit) VALUES (${user.id}, ${isFreeVisit ? 1 : 0})`
+      `INSERT INTO visits (user_id, product_type, is_free_visit, scanned_by) VALUES (${user.id}, '${productType}', ${isFreeVisit ? 1 : 0}, ${req.admin.id})`
     );
 
-    let newTotalVisits = user.total_visits;
-    let newFreeVisitsEarned = user.free_visits_earned;
-    let newFreeVisitsUsed = user.free_visits_used;
+    let newVisits = currentVisits;
+    let newFreeEarned = freeEarned;
+    let newFreeUsed = freeUsed;
 
     if (isFreeVisit) {
-      // Use free visit
-      newFreeVisitsUsed += 1;
+      // Use free visit (1 hour entry)
+      newFreeUsed += 1;
     } else {
       // Regular visit
-      newTotalVisits += 1;
-      newFreeVisitsEarned = Math.floor(newTotalVisits / 5);
+      newVisits += 1;
+      newFreeEarned = Math.floor(newVisits / 5);
     }
 
     await db.execute(
-      `UPDATE users SET total_visits = ${newTotalVisits}, free_visits_earned = ${newFreeVisitsEarned}, free_visits_used = ${newFreeVisitsUsed} WHERE id = ${user.id}`
+      `UPDATE users SET ${visitsField} = ${newVisits}, ${freeEarnedField} = ${newFreeEarned}, ${freeUsedField} = ${newFreeUsed} WHERE id = ${user.id}`
     );
 
     res.json({
       success: true,
-      message: isFreeVisit ? 'Free visit used successfully' : 'Visit recorded successfully',
+      message: isFreeVisit ? 'Voľný vstup použitý (1 hodina)' : 'Návšteva zaznamenaná',
       user: {
         name: `${user.first_name} ${user.last_name}`,
-        totalVisits: newTotalVisits,
-        freeVisitsEarned: newFreeVisitsEarned,
-        availableFreeVisits: newFreeVisitsEarned - newFreeVisitsUsed,
-        nextFreeVisitIn: isFreeVisit ? null : 5 - (newTotalVisits % 5)
+        productType: productType,
+        productLabel: productType === 'one_child' ? '1 dieťa' : '2 deti',
+        currentVisits: newVisits,
+        freeVisitsEarned: newFreeEarned,
+        availableFreeVisits: newFreeEarned - newFreeUsed,
+        nextFreeVisitIn: isFreeVisit ? null : 5 - (newVisits % 5)
       }
     });
   } catch (error) {
     console.error('Free visit error:', error);
-    console.error('Admin ID:', req.admin?.id);
     res.status(500).json({ 
       error: 'Failed to process visit',
-      details: error.message,
-      adminId: req.admin?.id
+      details: error.message
     });
   }
 });

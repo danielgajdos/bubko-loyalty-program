@@ -34,8 +34,8 @@ export default {
   getVisits: () => api.get('/users/visits'),
   
   // Admin endpoints
-  scanQR: (qrCode) => api.post('/admin/scan', { qrCode }),
-  confirmFreeVisit: (qrCode, useFreeVisit) => api.post('/admin/scan/free', { qrCode, useFreeVisit }),
+  scanQR: (qrCode, productType = 'one_child') => api.post('/admin/scan', { qrCode, productType }),
+  confirmFreeVisit: (qrCode, useFreeVisit, productType = 'one_child') => api.post('/admin/scan/free', { qrCode, useFreeVisit, productType }),
   getDashboard: () => api.get('/admin/dashboard'),
   
   // Admin user management endpoints

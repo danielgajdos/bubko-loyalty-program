@@ -13,34 +13,74 @@
               Ahoj astronaut {{ user.firstName }}! 👨‍🚀
             </h2>
             
-            <div class="stats-grid">
-              <div class="stat-card">
-                <div class="stat-icon">🚀</div>
-                <div class="stat-number">{{ user.totalVisits }}</div>
-                <div class="stat-label">Dokončené misie</div>
+            <!-- One Child Stats -->
+            <div class="product-section">
+              <h3 style="color: #333; margin-bottom: 15px;">👶 Vstup pre 1 dieťa</h3>
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-icon">🚀</div>
+                  <div class="stat-number">{{ user.oneChildVisits }}</div>
+                  <div class="stat-label">Návštevy</div>
+                </div>
+                
+                <div class="stat-card">
+                  <div class="stat-icon">🎁</div>
+                  <div class="stat-number">{{ user.oneChildFreeAvailable }}</div>
+                  <div class="stat-label">Voľné vstupy (1h)</div>
+                </div>
+                
+                <div class="stat-card">
+                  <div class="stat-icon">⭐</div>
+                  <div class="stat-number">{{ nextFreeOneChild }}</div>
+                  <div class="stat-label">Do ďalšej voľnej</div>
+                </div>
               </div>
               
-              <div class="stat-card">
-                <div class="stat-icon">🎁</div>
-                <div class="stat-number">{{ user.availableFreeVisits }}</div>
-                <div class="stat-label">Bonusové misie</div>
+              <div class="progress-section">
+                <div class="progress-bar">
+                  <div class="progress-fill" :style="{ width: progressOneChild + '%' }"></div>
+                </div>
+                <p style="color: #666; margin-top: 10px;">
+                  {{ user.oneChildVisits % 5 }}/5 návštev
+                </p>
+              </div>
+            </div>
+
+            <!-- Two Kids Stats -->
+            <div class="product-section">
+              <h3 style="color: #333; margin-bottom: 15px;">👶👶 Vstup pre 2 deti (špeciálna cena)</h3>
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-icon">🚀</div>
+                  <div class="stat-number">{{ user.twoKidsVisits }}</div>
+                  <div class="stat-label">Návštevy</div>
+                </div>
+                
+                <div class="stat-card">
+                  <div class="stat-icon">🎁</div>
+                  <div class="stat-number">{{ user.twoKidsFreeAvailable }}</div>
+                  <div class="stat-label">Voľné vstupy (1h)</div>
+                </div>
+                
+                <div class="stat-card">
+                  <div class="stat-icon">⭐</div>
+                  <div class="stat-number">{{ nextFreeTwoKids }}</div>
+                  <div class="stat-label">Do ďalšej voľnej</div>
+                </div>
               </div>
               
-              <div class="stat-card">
-                <div class="stat-icon">⭐</div>
-                <div class="stat-number">{{ nextFreeIn }}</div>
-                <div class="stat-label">Do ďalšej bonusovej</div>
+              <div class="progress-section">
+                <div class="progress-bar">
+                  <div class="progress-fill" :style="{ width: progressTwoKids + '%' }"></div>
+                </div>
+                <p style="color: #666; margin-top: 10px;">
+                  {{ user.twoKidsVisits % 5 }}/5 návštev
+                </p>
               </div>
             </div>
             
-            <div class="progress-section">
-              <h3 style="color: #333; margin-bottom: 15px;">Pokrok k ďalšej bonusovej misii</h3>
-              <div class="progress-bar">
-                <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
-              </div>
-              <p style="color: #666; margin-top: 10px;">
-                {{ user.totalVisits % 5 }}/5 misií
-              </p>
+            <div class="info-note">
+              ℹ️ Každá 6. návšteva je zadarmo - 1 hodina vstupu!
             </div>
           </div>
         </div>
@@ -112,15 +152,20 @@
               :key="visit.visit_date" 
               class="visit-item"
             >
-              <div class="visit-date">
-                {{ formatDate(visit.visit_date) }}
+              <div class="visit-info-left">
+                <div class="visit-date">
+                  {{ formatDate(visit.visit_date) }}
+                </div>
+                <div class="visit-product">
+                  {{ visit.product_type === 'one_child' ? '👶 1 dieťa' : '👶👶 2 deti' }}
+                </div>
               </div>
               <div class="visit-type">
                 <span v-if="visit.is_free_visit" class="free-badge">
-                  🎁 Bonusová misia
+                  🎁 Voľný vstup (1h)
                 </span>
                 <span v-else class="paid-badge">
-                  🚀 Štandardná misia
+                  🚀 Platený vstup
                 </span>
               </div>
             </div>
@@ -155,13 +200,21 @@ export default {
     }
   },
   computed: {
-    nextFreeIn() {
+    nextFreeOneChild() {
       if (!this.user) return 0
-      return 5 - (this.user.totalVisits % 5)
+      return 5 - (this.user.oneChildVisits % 5)
     },
-    progressPercentage() {
+    progressOneChild() {
       if (!this.user) return 0
-      return ((this.user.totalVisits % 5) / 5) * 100
+      return ((this.user.oneChildVisits % 5) / 5) * 100
+    },
+    nextFreeTwoKids() {
+      if (!this.user) return 0
+      return 5 - (this.user.twoKidsVisits % 5)
+    },
+    progressTwoKids() {
+      if (!this.user) return 0
+      return ((this.user.twoKidsVisits % 5) / 5) * 100
     }
   },
   async mounted() {
@@ -306,8 +359,22 @@ export default {
   opacity: 0.9;
 }
 
+.product-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 15px;
+  border: 2px solid #dee2e6;
+}
+
+.product-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .progress-section {
-  margin-top: 30px;
+  margin-top: 20px;
 }
 
 .progress-bar {
@@ -322,6 +389,17 @@ export default {
   height: 100%;
   background: linear-gradient(45deg, #4ecdc4, #96ceb4);
   transition: width 0.3s ease;
+}
+
+.info-note {
+  background: #fff3cd;
+  color: #856404;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: 600;
+  margin-top: 20px;
+  border: 2px solid #ffc107;
 }
 
 .codes-tabs {
@@ -397,9 +475,20 @@ export default {
   border-bottom: none;
 }
 
+.visit-info-left {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
 .visit-date {
   color: #333;
   font-weight: 600;
+}
+
+.visit-product {
+  color: #666;
+  font-size: 0.9rem;
 }
 
 .free-badge {

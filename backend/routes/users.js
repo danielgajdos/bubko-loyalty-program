@@ -10,7 +10,12 @@ router.get('/profile', authenticateToken, async (req, res) => {
     const db = req.app.locals.db;
     
     const [users] = await db.execute(
-      'SELECT id, email, first_name, last_name, phone, total_visits, free_visits_earned, free_visits_used, qr_code, barcode FROM users WHERE id = ?',
+      `SELECT id, email, first_name, last_name, phone, 
+       total_visits, free_visits_earned, free_visits_used, 
+       one_child_visits, one_child_free_earned, one_child_free_used,
+       two_kids_visits, two_kids_free_earned, two_kids_free_used,
+       qr_code, barcode 
+       FROM users WHERE id = ?`,
       [req.user.id]
     );
 
@@ -28,10 +33,25 @@ router.get('/profile', authenticateToken, async (req, res) => {
       firstName: user.first_name,
       lastName: user.last_name,
       phone: user.phone,
+      
+      // Legacy fields (for backward compatibility)
       totalVisits: user.total_visits,
       freeVisitsEarned: user.free_visits_earned,
       freeVisitsUsed: user.free_visits_used,
       availableFreeVisits: user.free_visits_earned - user.free_visits_used,
+      
+      // One child product
+      oneChildVisits: user.one_child_visits || 0,
+      oneChildFreeEarned: user.one_child_free_earned || 0,
+      oneChildFreeUsed: user.one_child_free_used || 0,
+      oneChildFreeAvailable: (user.one_child_free_earned || 0) - (user.one_child_free_used || 0),
+      
+      // Two kids product
+      twoKidsVisits: user.two_kids_visits || 0,
+      twoKidsFreeEarned: user.two_kids_free_earned || 0,
+      twoKidsFreeUsed: user.two_kids_free_used || 0,
+      twoKidsFreeAvailable: (user.two_kids_free_earned || 0) - (user.two_kids_free_used || 0),
+      
       qrCode: qrCodeDataURL,
       qrCodeText: user.qr_code,
       barcode: barcodeDataURL,
@@ -49,7 +69,7 @@ router.get('/visits', authenticateToken, async (req, res) => {
     const db = req.app.locals.db;
     
     const [visits] = await db.execute(
-      'SELECT visit_date, is_free_visit FROM visits WHERE user_id = ? ORDER BY visit_date DESC',
+      'SELECT visit_date, product_type, is_free_visit FROM visits WHERE user_id = ? ORDER BY visit_date DESC',
       [req.user.id]
     );
 
