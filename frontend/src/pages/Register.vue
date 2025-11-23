@@ -79,6 +79,47 @@
               >
             </div>
             
+            <!-- GDPR Consent -->
+            <div class="consent-section">
+              <div class="consent-item required">
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    v-model="form.gdprConsent" 
+                    required
+                    class="consent-checkbox"
+                  >
+                  <span class="checkbox-text">
+                    <strong>Súhlasím so spracovaním osobných údajov *</strong>
+                    <span class="consent-description">
+                      Beriem na vedomie, že moje osobné údaje (meno, priezvisko, email, telefón) budú spracované za účelom evidencie návštev a správy vernostného programu v súlade s GDPR. Viac informácií o spracovaní osobných údajov nájdete v našich 
+                      <a href="#" @click.prevent="showGdprInfo" class="consent-link">zásadách ochrany osobných údajov</a>.
+                    </span>
+                  </span>
+                </label>
+              </div>
+              
+              <div class="consent-item optional">
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    v-model="form.newsletterConsent"
+                    class="consent-checkbox"
+                  >
+                  <span class="checkbox-text">
+                    <strong>Súhlasím s odberom newslettera (voliteľné)</strong>
+                    <span class="consent-description">
+                      Chcem dostávať informácie o špeciálnych akciách, zľavách a podujatiach v Bubko Kids Place.
+                    </span>
+                  </span>
+                </label>
+              </div>
+              
+              <p class="consent-note">
+                * Povinné pole - bez súhlasu so spracovaním osobných údajov nie je možné dokončiť registráciu.
+              </p>
+            </div>
+            
             <div v-if="error" class="error">
               {{ error }}
             </div>
@@ -125,7 +166,9 @@ export default {
         email: '',
         phone: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        gdprConsent: false,
+        newsletterConsent: false
       },
       loading: false,
       error: '',
@@ -148,9 +191,19 @@ export default {
       return true
     },
     
+    showGdprInfo() {
+      alert('Zásady ochrany osobných údajov:\n\nVaše osobné údaje (meno, priezvisko, email, telefón) spracovávame za účelom:\n- Evidencie návštev v našom zariadení\n- Správy vernostného programu\n- Identifikácie pri vstupe pomocou QR kódu\n\nVaše údaje sú chránené v súlade s nariadením GDPR (EU) 2016/679.\n\nMáte právo na prístup k svojim údajom, ich opravu alebo vymazanie.\n\nKontakt: admin@bubko.sk')
+    },
+    
     async handleRegister() {
       this.error = ''
       this.success = ''
+      
+      // Validate GDPR consent
+      if (!this.form.gdprConsent) {
+        this.error = 'Pre dokončenie registrácie musíte súhlasiť so spracovaním osobných údajov'
+        return
+      }
       
       // Validate email
       if (!this.validateEmail()) {
@@ -175,7 +228,9 @@ export default {
           lastName: this.form.lastName,
           email: this.form.email,
           phone: this.form.phone,
-          password: this.form.password
+          password: this.form.password,
+          gdprConsent: this.form.gdprConsent,
+          newsletterConsent: this.form.newsletterConsent
         })
         
         localStorage.setItem('token', response.data.token)
@@ -218,5 +273,83 @@ export default {
   color: #ff6b6b;
   font-size: 0.9rem;
   margin-top: 5px;
+}
+
+.consent-section {
+  margin: 30px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 2px solid #e9ecef;
+}
+
+.consent-item {
+  margin-bottom: 20px;
+}
+
+.consent-item:last-of-type {
+  margin-bottom: 0;
+}
+
+.consent-item.required {
+  border-left: 4px solid #ff6b6b;
+  padding-left: 15px;
+}
+
+.consent-item.optional {
+  border-left: 4px solid #4ecdc4;
+  padding-left: 15px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  gap: 12px;
+}
+
+.consent-checkbox {
+  margin-top: 4px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checkbox-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #333;
+  line-height: 1.5;
+}
+
+.checkbox-text strong {
+  font-size: 1rem;
+  color: #333;
+}
+
+.consent-description {
+  font-size: 0.9rem;
+  color: #666;
+  display: block;
+}
+
+.consent-link {
+  color: #4ecdc4;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.consent-link:hover {
+  color: #45b7d1;
+}
+
+.consent-note {
+  margin-top: 15px;
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+  text-align: center;
 }
 </style>

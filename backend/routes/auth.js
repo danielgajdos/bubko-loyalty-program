@@ -9,8 +9,13 @@ const router = express.Router();
 // User registration
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, firstName, lastName, phone } = req.body;
+    const { email, password, firstName, lastName, phone, gdprConsent, newsletterConsent } = req.body;
     const db = req.app.locals.db;
+
+    // Validate GDPR consent (required)
+    if (!gdprConsent) {
+      return res.status(400).json({ error: 'GDPR consent is required for registration' });
+    }
 
     // Check if user exists
     const [existingUsers] = await db.execute(
@@ -29,10 +34,20 @@ router.post('/register', async (req, res) => {
     const qrCode = uuidv4();
     const barcode = qrCode; // Same code for both QR and barcode
 
-    // Insert user
+    // Get current timestamp for consent dates
+    const consentDate = new Date();
+
+    // Insert user with consent information
     const [result] = await db.execute(
-      'INSERT INTO users (email, password_hash, first_name, last_name, phone, qr_code, barcode) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [email, passwordHash, firstName, lastName, phone, qrCode, barcode]
+      `INSERT INTO users (
+        email, password_hash, first_name, last_name, phone, qr_code, barcode,
+        gdpr_consent, gdpr_consent_date, newsletter_consent, newsletter_consent_date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        email, passwordHash, firstName, lastName, phone, qrCode, barcode,
+        gdprConsent, consentDate, 
+        newsletterConsent || false, newsletterConsent ? consentDate : null
+      ]
     );
 
     // Generate QR code image
