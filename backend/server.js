@@ -6,6 +6,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
+const initRoutes = require('./routes/init');
 const { authenticateAdmin } = require('./middleware/auth');
 
 const app = express();
@@ -50,6 +51,7 @@ app.locals.db = pool;
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/init', initRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
