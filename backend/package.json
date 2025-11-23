@@ -1,7 +1,7 @@
 {
-  "name": "bubko-loyalty-backend",
+  "name": "kebab-loyalty-backend",
   "version": "1.0.0",
-  "description": "Backend for Bubko Kids Place Loyalty Program",
+  "description": "Backend for Kebab na Kyjevskom Loyalty Program",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

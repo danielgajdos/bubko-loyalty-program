@@ -1,7 +1,7 @@
 {
-  "name": "bubko-loyalty-program",
+  "name": "kebab-loyalty-program",
   "version": "1.0.0",
-  "description": "Space-themed loyalty program for Bubko kids place with QR code tracking",
+  "description": "Product-based loyalty program for Kebab na Kyjevskom with QR code tracking",
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
@@ -14,12 +14,13 @@
   "keywords": [
     "loyalty-program",
     "qr-code",
-    "kids-place",
+    "kebab",
+    "fast-food",
     "vue",
     "nodejs",
     "mysql"
   ],
-  "author": "Bubko Kids Place",
+  "author": "Kebab na Kyjevskom",
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.0"

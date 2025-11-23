@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "name": "kebab-loyalty-frontend",
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "frontend/dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/dist/$1"
+    }
+  ],
+  "env": {
+    "VITE_API_URL": "https://kebab-backend.up.railway.app"
+  }
+}

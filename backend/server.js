@@ -7,6 +7,8 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
 const initRoutes = require('./routes/init');
+const productRoutes = require('./routes/products');
+const visitRoutes = require('./routes/visits');
 const { authenticateAdmin } = require('./middleware/auth');
 
 const app = express();
@@ -52,10 +54,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/init', initRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/visits', visitRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Bubko Loyalty API is running', timestamp: new Date().toISOString() });
+  res.json({ status: 'OK', message: 'Kebab na Kyjevskom Loyalty API is running', timestamp: new Date().toISOString() });
 });
 
 // Debug endpoint to check user data
@@ -274,5 +278,5 @@ app.post('/api/setup-db', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🎈 Bubko Loyalty API running on port ${PORT} - MySQL ready`);
+  console.log(`🥙 Kebab na Kyjevskom Loyalty API running on port ${PORT} - MySQL ready`);
 });

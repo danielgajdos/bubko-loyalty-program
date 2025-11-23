@@ -11,6 +11,7 @@ import AdminLogin from './pages/AdminLogin.vue'
 import AdminDashboard from './pages/AdminDashboard.vue'
 import Scanner from './pages/Scanner.vue'
 import UserManagement from './pages/UserManagement.vue'
+import AdminScanMultiple from './pages/AdminScanMultiple.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -20,7 +21,8 @@ const routes = [
   { path: '/admin', component: AdminLogin },
   { path: '/admin/dashboard', component: AdminDashboard, meta: { requiresAdmin: true } },
   { path: '/admin/users', component: UserManagement, meta: { requiresAdmin: true } },
-  { path: '/admin/scanner', component: Scanner, meta: { requiresAdmin: true } }
+  { path: '/admin/scanner', component: Scanner, meta: { requiresAdmin: true } },
+  { path: '/admin/scan-multiple', component: AdminScanMultiple, meta: { requiresAdmin: true } }
 ]
 
 const router = createRouter({

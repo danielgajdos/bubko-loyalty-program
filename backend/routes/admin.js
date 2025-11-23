@@ -439,3 +439,46 @@ router.delete('/users/:userId', authenticateAdmin, async (req, res) => {
 });
 
 module.exports = router;
+// Get 
+user by QR code (for multi-product scan)
+router.get('/user-by-qr/:qrCode', authenticateAdmin, async (req, res) => {
+  try {
+    const { qrCode } = req.params;
+    const db = req.app.locals.db;
+
+    const [users] = await db.execute(
+      'SELECT * FROM users WHERE qr_code = ? OR barcode = ?',
+      [qrCode, qrCode]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(users[0]);
+  } catch (error) {
+    console.error('Error finding user:', error);
+    res.status(500).json({ error: 'Failed to find user' });
+  }
+});
+
+// Get user stamps (for multi-product scan)
+router.get('/user-stamps/:userId', authenticateAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const db = req.app.locals.db;
+
+    const [stamps] = await db.execute(`
+      SELECT ps.*, p.name as product_name, p.category, p.price
+      FROM product_stamps ps
+      JOIN products p ON ps.product_id = p.id
+      WHERE ps.user_id = ? AND p.active = TRUE
+      ORDER BY p.category, p.name
+    `, [userId]);
+
+    res.json(stamps);
+  } catch (error) {
+    console.error('Error fetching user stamps:', error);
+    res.status(500).json({ error: 'Failed to fetch stamps' });
+  }
+});

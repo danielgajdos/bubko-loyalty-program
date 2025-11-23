@@ -1,49 +1,50 @@
 <template>
   <div class="home">
-    <div class="bubko-banner">
-      <img src="/bubko-banner.jpg" alt="Bubko Detská Hernička" class="banner-image" />
+    <div class="kebab-banner">
+      <h1 class="title">🥙 Kebab na Kyjevskom</h1>
+      <p class="subtitle">Vernostný program</p>
     </div>
     
     <div class="container">
       <div class="hero text-center">
-        <p class="space-tagline">Vesmírne dobrodružstvo plné zábavy! 🌟</p>
+        <p class="tagline">Chutné jedlo, skvelé odmeny! 🌟</p>
         
         <div class="card hero-card">
-          <h2 style="color: #333; margin-bottom: 20px;">Vernostný program</h2>
+          <h2 style="color: #333; margin-bottom: 20px;">Ako to funguje?</h2>
           <p style="color: #666; margin-bottom: 30px; font-size: 18px;">
-            Zbieraj návštevy a získaj každú 6. návštevu zadarmo - 1 hodina vstupu! 🎁
+            Kúp 10 produktov, 11. dostaneš zadarmo! 🎁
           </p>
           
           <div class="features">
             <div class="feature">
-              <div class="feature-icon">🛸</div>
-              <h3>Vesmírny QR kód</h3>
-              <p>Každý astronaut dostane svoj jedinečný QR kód</p>
+              <div class="feature-icon">📱</div>
+              <h3>Tvoj QR kód</h3>
+              <p>Každý zákazník dostane svoj jedinečný QR kód</p>
             </div>
             <div class="feature">
               <div class="feature-icon">🎁</div>
-              <h3>Kozmické odmeny</h3>
-              <p>Po 5 platených vstupoch je 6. vstup zadarmo (1 hodina)</p>
+              <h3>Zbieraj pečiatky</h3>
+              <p>Za každý produkt získaš pečiatku - 10 pečiatok = 1 produkt zadarmo</p>
             </div>
             <div class="feature">
-              <div class="feature-icon">🌟</div>
-              <h3>Sledovanie misií</h3>
-              <p>Sleduj svoj pokrok vo vesmírnom profile</p>
+              <div class="feature-icon">🥙</div>
+              <h3>Osobné sledovanie</h3>
+              <p>Každý produkt má vlastné pečiatky - Kebab, Pizza, Burger...</p>
             </div>
           </div>
           
           <div class="cta-buttons">
             <router-link to="/register" class="btn btn-primary">
-              🚀 Pripoj sa k misii
+              🚀 Zaregistruj sa
             </router-link>
             <router-link to="/login" class="btn btn-secondary">
-              👨‍🚀 Prihlásenie astronauta
+              👤 Prihlásenie
             </router-link>
           </div>
           
           <div class="admin-link mt-20">
             <router-link to="/admin" style="color: #666; text-decoration: none;">
-              🛰️ Riadiace centrum
+              🔐 Admin prístup
             </router-link>
           </div>
         </div>
@@ -64,27 +65,26 @@ export default {
   position: relative;
 }
 
-.bubko-banner {
+.kebab-banner {
   width: 100%;
   margin-bottom: 40px;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a237e 0%, #283593 25%, #3949ab 50%, #5c6bc0 75%, #7986cb 100%);
-  padding: 20px;
+  background: linear-gradient(135deg, #B71C1C 0%, #C62828 25%, #D32F2F 50%, #E64A19 75%, #FF6F00 100%);
+  padding: 40px 20px;
   border-radius: 0 0 30px 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
-.banner-image {
-  max-width: 100%;
-  height: auto;
-  max-height: 400px;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s ease;
+.kebab-banner .title {
+  margin-bottom: 10px;
 }
 
-.banner-image:hover {
-  transform: scale(1.02);
+.kebab-banner .subtitle {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .container {
@@ -100,7 +100,7 @@ export default {
   z-index: 2;
 }
 
-.space-tagline {
+.tagline {
   color: #fff;
   font-size: 1.1rem;
   margin-bottom: 30px;

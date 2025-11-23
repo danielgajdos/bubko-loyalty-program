@@ -1,7 +1,7 @@
 {
-  "name": "bubko-loyalty-frontend",
+  "name": "kebab-loyalty-frontend",
   "version": "1.0.0",
-  "description": "Frontend for Bubko Kids Place Loyalty Program",
+  "description": "Frontend for Kebab na Kyjevskom Loyalty Program",
   "main": "index.js",
   "scripts": {
     "dev": "vite",

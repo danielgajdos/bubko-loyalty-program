@@ -19,7 +19,7 @@ export default {
 
 body {
   font-family: 'Open Sans', sans-serif;
-  background: linear-gradient(135deg, #1a237e 0%, #283593 25%, #3949ab 50%, #5c6bc0 75%, #7986cb 100%);
+  background: linear-gradient(135deg, #B71C1C 0%, #C62828 25%, #D32F2F 50%, #E64A19 75%, #FF6F00 100%);
   background-size: 400% 400%;
   animation: gradientShift 20s ease infinite;
   min-height: 100vh;
@@ -88,7 +88,7 @@ body::before {
   left: -2px;
   right: -2px;
   bottom: -2px;
-  background: linear-gradient(45deg, #7986cb, #5c6bc0, #3949ab, #283593);
+  background: linear-gradient(45deg, #D32F2F, #FF6F00, #FFA726, #E64A19);
   border-radius: 25px;
   z-index: -1;
   opacity: 0.1;
@@ -108,26 +108,26 @@ body::before {
 }
 
 .btn-primary {
-  background: linear-gradient(45deg, #7986cb, #5c6bc0);
+  background: linear-gradient(45deg, #D32F2F, #C62828);
   color: white;
-  box-shadow: 0 8px 25px rgba(121, 134, 203, 0.4);
+  box-shadow: 0 8px 25px rgba(211, 47, 47, 0.4);
 }
 
 .btn-primary:hover {
   transform: translateY(-3px);
-  box-shadow: 0 15px 35px rgba(121, 134, 203, 0.6);
-  background: linear-gradient(45deg, #8e99f3, #6d7ce0);
+  box-shadow: 0 15px 35px rgba(211, 47, 47, 0.6);
+  background: linear-gradient(45deg, #E53935, #D32F2F);
 }
 
 .btn-secondary {
-  background: linear-gradient(45deg, #3949ab, #283593);
+  background: linear-gradient(45deg, #FF6F00, #E64A19);
   color: white;
-  box-shadow: 0 8px 25px rgba(57, 73, 171, 0.4);
+  box-shadow: 0 8px 25px rgba(255, 111, 0, 0.4);
 }
 
 .btn-secondary:hover {
   transform: translateY(-3px);
-  box-shadow: 0 15px 35px rgba(57, 73, 171, 0.6);
+  box-shadow: 0 15px 35px rgba(255, 111, 0, 0.6);
 }
 
 .btn-success {
@@ -158,8 +158,8 @@ body::before {
 
 .form-group input:focus {
   outline: none;
-  border-color: #7986cb;
-  box-shadow: 0 0 15px rgba(121, 134, 203, 0.3);
+  border-color: #D32F2F;
+  box-shadow: 0 0 15px rgba(211, 47, 47, 0.3);
 }
 
 .title {
@@ -168,7 +168,7 @@ body::before {
   color: #fff;
   text-shadow: 
     0 0 10px rgba(255, 255, 255, 0.5),
-    0 0 20px rgba(121, 134, 203, 0.8),
+    0 0 20px rgba(255, 111, 0, 0.8),
     2px 2px 4px rgba(0, 0, 0, 0.3);
   margin-bottom: 20px;
   animation: glow 2s ease-in-out infinite alternate;
@@ -178,13 +178,13 @@ body::before {
   from {
     text-shadow: 
       0 0 10px rgba(255, 255, 255, 0.5),
-      0 0 20px rgba(121, 134, 203, 0.8),
+      0 0 20px rgba(255, 111, 0, 0.8),
       2px 2px 4px rgba(0, 0, 0, 0.3);
   }
   to {
     text-shadow: 
       0 0 15px rgba(255, 255, 255, 0.8),
-      0 0 30px rgba(121, 134, 203, 1),
+      0 0 30px rgba(255, 111, 0, 1),
       2px 2px 4px rgba(0, 0, 0, 0.3);
   }
 }
