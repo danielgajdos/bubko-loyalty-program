@@ -3,8 +3,8 @@
     <div class="container">
       <div class="register-form">
         <div class="text-center mb-20">
-          <h1 class="title">🚀 Registrácia astronauta</h1>
-          <p class="subtitle">Pripoj sa k našej vesmírnej posádke!</p>
+          <h1 class="title">🥙 Registrácia</h1>
+          <p class="subtitle">Pripoj sa k vernostnému programu!</p>
         </div>
         
         <div class="card">
@@ -109,7 +109,7 @@
                   <span class="checkbox-text">
                     <strong>Súhlasím s odberom newslettera (voliteľné)</strong>
                     <span class="consent-description">
-                      Chcem dostávať informácie o špeciálnych akciách, zľavách a podujatiach v Bubko Kids Place.
+                      Chcem dostávať informácie o špeciálnych akciách, zľavách a novinkách v Kebab na Kyjevskom.
                     </span>
                   </span>
                 </label>
@@ -129,8 +129,7 @@
             </div>
             
             <button type="submit" class="btn btn-primary" style="width: 100%;" :disabled="loading">
-              🚀
-              {{ loading ? 'Pripájam k misii...' : 'Pripojiť sa k misii' }}
+              {{ loading ? 'Registrujem...' : 'Registrovať sa' }}
             </button>
           </form>
           
@@ -144,7 +143,7 @@
           
           <div class="text-center mt-20">
             <router-link to="/" class="btn btn-secondary">
-              🏠 Späť na vesmírnu stanicu
+              🏠 Späť na hlavnú stránku
             </router-link>
           </div>
         </div>
@@ -192,7 +191,7 @@ export default {
     },
     
     showGdprInfo() {
-      alert('Zásady ochrany osobných údajov:\n\nVaše osobné údaje (meno, priezvisko, email, telefón) spracovávame za účelom:\n- Evidencie návštev v našom zariadení\n- Správy vernostného programu\n- Identifikácie pri vstupe pomocou QR kódu\n\nVaše údaje sú chránené v súlade s nariadením GDPR (EU) 2016/679.\n\nMáte právo na prístup k svojim údajom, ich opravu alebo vymazanie.\n\nKontakt: admin@bubko.sk')
+      alert('Zásady ochrany osobných údajov:\n\nVaše osobné údaje (meno, priezvisko, email, telefón) spracovávame za účelom:\n- Evidencie nákupov v našej prevádzke\n- Správy vernostného programu\n- Identifikácie pri nákupe pomocou QR kódu\n\nVaše údaje sú chránené v súlade s nariadením GDPR (EU) 2016/679.\n\nMáte právo na prístup k svojim údajom, ich opravu alebo vymazanie.\n\nKontakt: admin@kebab-bb.sk')
     },
     
     async handleRegister() {

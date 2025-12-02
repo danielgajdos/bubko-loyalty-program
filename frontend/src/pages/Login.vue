@@ -3,8 +3,8 @@
     <div class="container">
       <div class="login-form">
         <div class="text-center mb-20">
-          <h1 class="title">👨‍🚀 Prihlásenie astronauta</h1>
-          <p class="subtitle">Vitaj späť na vesmírnej stanici!</p>
+          <h1 class="title">🥙 Prihlásenie</h1>
+          <p class="subtitle">Vitaj späť v Kebab na Kyjevskom!</p>
         </div>
         
         <div class="card">
@@ -36,8 +36,7 @@
             </div>
             
             <button type="submit" class="btn btn-primary" style="width: 100%;" :disabled="loading">
-              🚀
-              {{ loading ? 'Pripájam sa...' : 'Pripojiť sa k misii' }}
+              {{ loading ? 'Prihlasovanie...' : 'Prihlásiť sa' }}
             </button>
           </form>
           
@@ -51,7 +50,7 @@
           
           <div class="text-center mt-20">
             <router-link to="/" class="btn btn-secondary">
-              🏠 Späť na vesmírnu stanicu
+              🏠 Späť na hlavnú stránku
             </router-link>
           </div>
         </div>
