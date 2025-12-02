@@ -482,3 +482,49 @@ router.get('/user-stamps/:userId', authenticateAdmin, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch stamps' });
   }
 });
+
+
+// Get dashboard statistics
+router.get('/dashboard', authenticateAdmin, async (req, res) => {
+  try {
+    const db = req.app.locals.db;
+    
+    // Get total users
+    const [totalUsersResult] = await db.execute('SELECT COUNT(*) as count FROM users');
+    const totalUsers = totalUsersResult[0].count;
+    
+    // Get today's visits
+    const [todayVisitsResult] = await db.execute(
+      'SELECT COUNT(*) as count FROM visits WHERE DATE(visit_date) = CURDATE()'
+    );
+    const todayVisits = todayVisitsResult[0].count;
+    
+    // Get this month's visits
+    const [monthVisitsResult] = await db.execute(
+      'SELECT COUNT(*) as count FROM visits WHERE MONTH(visit_date) = MONTH(CURDATE()) AND YEAR(visit_date) = YEAR(CURDATE())'
+    );
+    const monthVisits = monthVisitsResult[0].count;
+    
+    // Get recent visits (last 10)
+    const [recentVisits] = await db.execute(`
+      SELECT v.*, u.first_name, u.last_name, u.email,
+             CASE WHEN vi.is_free = TRUE THEN TRUE ELSE FALSE END as is_free_visit
+      FROM visits v
+      JOIN users u ON v.user_id = u.id
+      LEFT JOIN visit_items vi ON v.id = vi.visit_id
+      GROUP BY v.id
+      ORDER BY v.visit_date DESC
+      LIMIT 10
+    `);
+    
+    res.json({
+      totalUsers,
+      todayVisits,
+      monthVisits,
+      recentVisits
+    });
+  } catch (error) {
+    console.error('Dashboard error:', error);
+    res.status(500).json({ error: 'Failed to get dashboard data' });
+  }
+});
