@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const Visit = require('../models/Visit');
-const User = require('../models/User');
 const { authenticateToken, authenticateAdmin } = require('../middleware/auth');
 
 // Get user's visit history
