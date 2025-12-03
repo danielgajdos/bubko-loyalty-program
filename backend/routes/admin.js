@@ -438,9 +438,7 @@ router.delete('/users/:userId', authenticateAdmin, async (req, res) => {
   }
 });
 
-module.exports = router;
-// Get 
-user by QR code (for multi-product scan)
+// Get user by QR code (for multi-product scan)
 router.get('/user-by-qr/:qrCode', authenticateAdmin, async (req, res) => {
   try {
     const { qrCode } = req.params;
@@ -528,3 +526,6 @@ router.get('/dashboard', authenticateAdmin, async (req, res) => {
     res.status(500).json({ error: 'Failed to get dashboard data' });
   }
 });
+
+
+module.exports = router;
