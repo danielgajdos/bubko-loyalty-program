@@ -183,10 +183,13 @@ router.get('/dashboard', authenticateAdmin, async (req, res) => {
 
     // Get recent visits
     const [recentVisits] = await db.execute(`
-      SELECT v.visit_date, v.is_free_visit, u.first_name, u.last_name 
-      FROM visits v 
-      JOIN users u ON v.user_id = u.id 
-      ORDER BY v.visit_date DESC 
+      SELECT v.visit_date, u.first_name, u.last_name, u.email,
+             MAX(vi.is_free) as is_free_visit
+      FROM visits v
+      JOIN users u ON v.user_id = u.id
+      LEFT JOIN visit_items vi ON v.id = vi.visit_id
+      GROUP BY v.id, v.visit_date, u.first_name, u.last_name, u.email
+      ORDER BY v.visit_date DESC
       LIMIT 10
     `);
 
